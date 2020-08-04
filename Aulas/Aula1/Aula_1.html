@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aula 1 - Revisão de Conceitos Básicos</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Aula 1 - Revisão de Conceitos Básicos
+## Material fortemente baseado nas aulas de Nicoleta Serban (Georgia Tech)
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-06-25)
+
+---
+
+#Revisão de Conceitos Básicos
+
+Nessa aula, os seguintes tópicos serão abordados:
+
+- **Modelos Probabilísticos**: Distribuição Normal, Binomial, Poisson e etc ..
+
+- **Distribuições Multivariadas**: Distribuição conjunta, mariginal e condicional
+
+- **Momentos de uma distribuição**: Caracteriza completamente a distribuição
+
+- **Métodos de Estimação**: Métodos dos momentos versus Método de Estimação da Máxinma
+Verossimilhança
+
+- **Distribuição Amostral**
+
+
+
+---
+
+### Modelos Probabilísticos - Modelo Normal
+
+`$$f(x) = \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{1}{2}\frac{(x-\mu)^2}{\sigma^2}}, \phantom{111}
+-\infty &lt; x &lt; \infty$$`
+
+![](Aula_1_files/figure-html/unnamed-chunk-1-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+
+#Distribuições Multivariadas
+
+**Distribuição Conjunta** (3 variáveis)
+
+`$$f(x,y,z) = f(x|y,z) f(y|z) f(z)$$`
+
+**Supondo Independência**
+
+`$$f(x_1, \ldots, x_n) = \prod_{i=1}^n f(x_i)$$`
+
+
+---
+class: middle
+
+#Normal Multivariada
+
+**Distribuição Conjunta**
+
+`$$f(x_1, \ldots, x_n) = \frac{1}{\sqrt{(2\pi)^k|\boldsymbol{\Sigma}|}}
+\exp\left( 
+-\frac{1}{2}(\mathbf{x} - \boldsymbol{\mu})^{'}\boldsymbol{\Sigma}^{-1}(\mathbf{x} - \boldsymbol{\mu})   \right)$$`
+
+**Distribuição Condicional**
+
+Se `\(\mathbf{Y}|\mathbf{X} = \mathbf{x} \sim N(\mathbf{0}, \boldsymbol{\Sigma})\)`,
+
+**Esperança Condicional**
+
+`$$\boldsymbol{\mu}_{\mathbf{Y}|\mathbf{X} = \mathbf{x}} = 
+\boldsymbol{\mu}_{\mathbf{Y}} + \boldsymbol{\Sigma}_{\mathbf{Y}\mathbf{X}} \boldsymbol{\Sigma}_{\mathbf{X}\mathbf{X}}^{-1}(\mathbf{x} - \boldsymbol{\mu}_{\mathbf{X}})$$`
+
+**Variância Condicional**
+
+`$$\boldsymbol{\Sigma}_{\mathbf{Y}|\mathbf{Y} = \mathbf{x}} = 
+\boldsymbol{\Sigma}_{\mathbf{Y}\mathbf{Y}} - \boldsymbol{\Sigma}_{\mathbf{Y}\mathbf{X}} \boldsymbol{\Sigma}_{\mathbf{X}\mathbf{X}}^{-1}\boldsymbol{\Sigma}_{\mathbf{X}\mathbf{Y}}$$`
+
+
+
+---
+
+# Momento de uma Distribuição
+
+-  Momentos de uma variável aleatória `\(X\)` com densidade `\(f(x)\)`
+
+  - `\(l\)`-ésimo momento:
+
+    `$$m_l^{'} = E[X^l] = \int_{-\infty}^{\infty} x^l f(x) dx$$`
+  - `\(l\)`-ésimo momento central
+
+    `$$m_l = E[(X - \mu)^l] = \int_{-\infty}^{\infty} (x-\mu)^l f(x) dx$$`
+
+####Exemplos de Momentos
+
+- Esperança: `\(E[X]\)`
+- Variância: `\(E[(X - \mu)^2]\)`
+- Coeficiente de Assimetria: `\(E\left[\frac{\left(X - \mu\right)^3}{\sigma^3}\right]\)`
+- Curtose: `\(E\left[\frac{\left(X - \mu\right)^4}{\sigma^4}\right]\)`   
+
+---
+
+#Revisão de Inferência Estatística
+
+
+
+- **População** :  O conjunto de valores de uma característica (observável) associada a uma coleção de indivíduos ou objetos de interesse  é dito ser uma população.
+
+- **Amostra**:  Qualquer parte (ou subconjunto) de uma população é denominada uma amostra.
+
+ -  Nesse curso, vamos assumir que a população seja infinita e que o processo de amostragem 
+seja amostra aleatória simples com reposição, nesse contexto.
+
+  - **Uma amostra é uma sequência `\(X_1, \ldots, X_n\)` de `\(n\)` variáveis aleatórias independentes e identicamente distribuídas  (iid) com função de densidade** `\(f(x, \theta)\)`.
+
+---
+
+#Revisão de Inferência Estatística
+
+- **Parâmetros**: Uma característica numérica da **população** ou de um **modelo estatístico**.
+
+Nesse curso, usaremos apenas inferência frequentista. Na abordagem frequentista, os parâmetros são valores fixos e  desconhecidos.
+
+- **Estimação**: O objetivo é procurar, segundo algum critério especificado, valores que representem adequadamente os parâmetros desconhecidos. 
+
+
+#### - Momentos amostrais
+
+- Dada uma amostra aleatória `\(\left\{ X_1, \ldots, X_n\right\}\)`, tem-se
+
+`$$\hat{\mu} = \bar{X} = \frac{1}{n}\sum_{i=1}^n X_i$$`
+
+`$$\hat{\sigma^2} = S^2 = \frac{1}{n - 1}\sum_{i=1}^n(X_i - \bar{X})^2$$`
+
+---
+class:  middle
+
+
+#Revisão de Inferência Estatística
+
+- **Grau de liberdade**:  o número de variáveis livres que dispomos para calcular
+o valor de uma determinada estatística.
+
+- Esse vídeo tem uma explicação bem interessante sobre [grau de liberdade](https://www.youtube.com/watch?v=rATNoxKg1yA).
+
+
+
+---
+## Método dos Momentos
+
+###Média
+Supondo `\(X_1, \ldots, X_n \sim N(\mu, \sigma^2),\)`
+`$$E[X] = \mu \Rightarrow \hat{\mu} = \frac{1}{n}\sum_{i=1}^n X_i$$`
+
+###Variância
+
+`$$E[X^2] = (\sigma^2 + \mu^2) \Rightarrow$$`
+`\begin{align}
+(\hat{\sigma^2 } + \hat{\mu^2}) &amp;=&amp; \frac{1}{n}(\sum_{i=1}^n X_i^2) \\
+\hat{\sigma^2 }  &amp;=&amp; \frac{1}{n}(\sum_{i=1}^n X_i^2 - n\bar{X}^2)
+\end{align}`
+
+
+---
+## Método da Máxima Verossimilhança
+
+- Maximizar a função de verossimilhança de `\(\theta\)` condicional aos dados.
+
+- Distribuição conjunta de `\(X_1, \ldots, X_n \sim f(x, \theta)\)` sob pressuposição de 
+independência 
+
+`$$f(x_1, \ldots, x_n; \theta) = \prod_{i=1}^n f(x_i; \theta)$$`
+
+- Função de Verossimilhança 
+
+`\begin{align}
+ L(\theta: x_1, \ldots, x_n) &amp;=&amp; f(x_1, \ldots, x_n) \\
+ \mbox{EMV}: \hat{\theta} = \mbox{argmax}_{\theta \in \Theta}  L(\theta: x_1, \ldots, x_n)
+\end{align}`
+
+Essa sequência de vídeos discute aspectos da função de verossimilhança
+[statquest1](https://www.youtube.com/watch?v=pYxNSUDSFH4&amp;t=3s), 
+[statquest2](https://www.youtube.com/watch?v=XepXtl9YKwc),
+[statquest3](https://www.youtube.com/watch?v=Dn6b9fCIUpM) e [explicação](https://stats.stackexchange.com/questions/50819/validity-of-maximising-log-likelihood-for-maximum-likelihood-estimation).
+
+
+---
+class:  middle
+
+##Propriedades dos Estimadores
+
+###Viés
+
+- `$$E[\hat{\theta}] = \theta.$$`
+
+###Consistência
+
+- $$\displaystyle \mbox{lim}_{n \rightarrow \infty}
+P\left(|\hat{\theta} - \theta| &gt; \epsilon \right) = 0  $$
+
+
+Esse vídeo explica bem essas [propriedades](https://www.youtube.com/watch?v=6i7mqDJICzQ)
+
+
+
+---
+class:  middle
+
+##Distribuição Amostral
+
+Para começar a discutir esse tópico, vamos assistir a esse vídeo sobre [distribuição amostral](https://www.youtube.com/watch?v=Zbw-YvELsaM)
+
+**Sob a pressuposição de normalidade**:
+
+- `\(X_1, \ldots, X_n\)`, a distribuição da média amostral é dada por:
+
+`$$\bar{X} \sim N\left( \mu, \frac{\sigma^2}{n}\right)$$` e
+
+`$$\frac{S^2(n-1)}{\sigma^2} \sim \chi^2_{n-1}.$$`
+
+
+No entanto, se a pressuposição de normalidade não for válida, para 
+`\(n\)` suficientemente grande, podemos usar o teorema do limite central
+[TCL](https://www.youtube.com/watch?v=YAlJCEDH2uY)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

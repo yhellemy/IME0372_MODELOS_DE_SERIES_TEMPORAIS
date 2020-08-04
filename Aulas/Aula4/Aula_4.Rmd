@@ -1,0 +1,280 @@
+---
+title: "Aula 4 - Sazonalidade "
+subtitle: "Material fortemente baseado no livro de Morettin e Toloi (2004)"
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: middle
+#Introdução
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(ggpmisc)
+library(knitr)
+library(kableExtra)
+library(lubridate)
+library(zoo)
+library(httr)
+library(xlsx)
+```
+
+##Modelo de decomposição da série
+
+$$Z_t = T_t + S_t + a_t,$$
+em que $T_t$ e $S_t$ representam a tendência e sazonalidade, enquanto $a_t$ é
+um componente aleatório de média zero e variância constante $\sigma_{a}$.
+
+- Supondo que  $a_t$ seja um ruído branco, então $E[a_t, a_s] = 0$,
+$s \neq t$. 
+
+
+---
+class: middle
+
+#Sazonalidade - Modelo Aditivo
+
+- O objetivo será ajustar uma série para a componente sazonal, ou seja, estimar $S_t$ e subtrair a série estimada de $Z_t$ no modelo de decomposição de série.
+
+- Desta maneira, um *procedimento de ajustamento sazonal* consiste em:
+
+a.  obter estimativas $\hat{S}_t$ de $S_t$;
+
+b.  calcular
+
+$$Z^{SA}_t = Z_t - \hat{S}_t.$$
+
+
+---
+class: middle
+
+#Sazonalidade - Modelo Multiplicativo
+
+$$Z_t = T_t S_t a_t,$$
+a série sazonalmente ajustada será
+
+$$S_t^{SA} = \frac{Z_t}{\hat{S}_t}.$$
+
+Outra opção seria tomar logaritmos para poder voltar ao modelo aditivo.
+
+---
+class: middle
+
+#Sazonalidade - Conceitos
+
+- Empiricamente, considera-se fenômenos sazonais aqueles que ocorrem regularmente de ano para ano, como um aumento de vendas de passagens aéreas no verão, vendas no comércio no Natal e etc...
+
+- O que se observa em séries sazonais é que ocorrem relações:
+
+a . Entre observações para meses sucessivos em um ano particular;
+
+b . Entre as observações para o mesmo mês em anos sucessivos.
+
+##Métodos para estimar sazonalidade
+
+a. Sazonalidade determinística (modelos de regressão)
+
+b. Sazonalidade estocástica (método das médias móveis)
+
+c. Modelos SARIMA
+
+d. Modelos de Espaço de Estados
+
+---
+class: middle
+##Sazonalidade determinística (modelos de regressão)
+
+###Modelo de Regressão
+
+$$Z_t = \sum_{j=0}^m \beta_j t^j + \sum_{j=1}^{12} \alpha_j d_{jt}+ a_t.$$
+em $t$ é o tempo (meses por exemplo) e $d_{ij}$ é uma covariável que assume valor 1 se o tempo $t$ corresponde ao mês $j$ e 0, caso contrário.
+
+- No entanto, a matriz de incidência desse modelo é de posto incompleto.
+
+
+---
+class: middle
+##Sazonalidade determinística (modelos de regressão)
+
+Para resolver esse problema define-se
+
+\begin{align}
+D_{jt} = \left\{\begin{array}{cc} 
+ 1    & \mbox{se o período} \phantom{1} t \phantom{1} \mbox{corresponde ao mês} \phantom{1} j, \\
+-1    & \mbox{se o período} \phantom{1} t \phantom{1} \mbox{corresponde ao mês} \phantom{1} 12, \\
+ 0,   & c.c, \phantom{11} j = 1, \ldots, 11.   
+\end{array}\right.
+\end{align}
+
+
+e, consequentemente, 
+
+$$Z_t = \sum_{j=0}^m \beta_j t^j + \sum_{j=1}^{11} \alpha_j D_{jt}+ a_t.$$
+
+o que na forma matricial resulta: 
+
+\begin{align}
+\mathbf{Z} =& \mathbf{X}\boldsymbol{\beta} + \mathbf{F}\boldsymbol{\alpha} + \boldsymbol{a} \\
+=& [\mathbf{X} | \mathbf{F}]\boldsymbol{\theta} + \boldsymbol{a}.
+\end{align}
+
+
+
+---
+class: middle
+##Exemplo no R 
+
+```{r, eval = FALSE,  warning = FALSE, message = FALSE}
+
+
+dat = read_csv("dados.csv") 
+dat = mutate(dat, tempo=1:nrow(dat), 
+             Mes= factor(Mes),
+             Resp = Resp*1000)
+
+ggplot(dat,aes(x=tempo, y=Resp)) +geom_point() + theme_bw()
+
+
+```
+
+---
+class: middle
+####Série de Índice de Produto Industrial do Brasil
+
+```{r, echo = FALSE,  warning = FALSE, message = FALSE}
+
+
+dat = read_csv("dados.csv") 
+dat = mutate(dat, tempo=1:nrow(dat), 
+             Mes= factor(Mes),
+             Resp = Resp*1000)
+
+ggplot(dat,aes(x=tempo, y=Resp)) +geom_point() + theme_bw()
+
+
+
+
+
+```
+
+
+---
+class: middle
+####Série de Índice de Produto Industrial do Brasil
+
+
+##Matriz X
+
+```{r, echo = FALSE,  warning = FALSE, message = FALSE}
+
+X = model.matrix(Resp ~ tempo , data=dat)
+head(X)
+
+```
+
+---
+class: middle
+####Série de Índice de Produto Industrial do Brasil
+
+
+##Constrastes da Matriz F
+
+```{r, echo = FALSE,  warning = FALSE, message = FALSE}
+
+attr(dat$Mes, "contrasts") <- contr.sum(12) 
+
+contr.sum(12) 
+
+```
+
+
+
+---
+class: middle
+####Série de Índice de Produto Industrial do Brasil
+
+
+```{r, echo = FALSE,  warning = FALSE, message = FALSE}
+
+summary(lm(Resp ~ tempo + Mes, data=dat))
+
+#Coisas para discutir
+#dat %>% group_by(Mes) %>% summarise(Resp=mean(Resp))
+#teste = lm(Resp ~  Mes-1, data = dat)
+#teste = lm(Resp ~  Mes, data = dat)
+
+
+```
+
+
+
+---
+class: middle
+##Teste para sazonalidade - Modelo de Análise de Variância
+
+Para testar a hipótese de sazonalidade, pode-se recorrer aos modelos de Análise de Variância com uma única classificação ("experimentos inteiramente ao acaso")
+
+###Modelo ANOVA
+
+$$Z_{ij} = S_j + \epsilon_{ij},$$
+assume-se que os meses são os tratamentos e os anos são repetições.
+
+
+---
+class: middle
+
+##Sazonalidade Estocástica
+
+- O método de médias móveis é apropriado quando se tem uma série temporal cuja a componente sazonal varia com o tempo (estocástico).
+
+- Dado que a tendência é estimada por meio de
+
+$$\hat{T}_t = \sum_{j=-n}^n c_j Z_{t+j}, \phantom{111} t = n + 1, \ldots, N - n$$
+
+- Os componentes sazonais são estimados da seguinte forma
+
+- Inicialmente, calcula-se $Z_t = Y_t - \hat{T}_t$.
+
+- Logo após, toma-se média dos meses: janeiro, fevereiro e etc .. .
+
+$$\bar{Z}_{.j} = \frac{1}{n_j}\sum_{i=1}^{n_j} Z_{ij}, \phantom{11} j = 1, \ldots, 12.$$
+
+- Como a soma dos $\hat{Z}_{.j}$ em geral não é zero, toma-se como estimativas das constantes sazonais
+
+$$\hat{S}_j = \bar{Z}_{.j} - \bar{Z},$$
+
+em que $\bar{Z} = \frac{1}{12}\sum_{j=1}^{12}\bar{Z}_{.j}$.
+
+---
+##Sazonalidade estocástica 
+
+###Série livre de sazonalidade
+
+$$Z^{SA} = Z_t - \hat{S}_t$$
+
+###Modelo multiplicativo
+
+- Se o modelo for multiplicativo, obtem-se $Z_t = \frac{Y_t}{\hat{T}_t}$, $\bar{Z}_{.j}$, $\bar{Z}$ como antes e estima-se $S_j$ por meio de 
+
+$$\hat{S}_{.j} = \frac{\bar{Z}_{.j}}{\bar{Z}}$$
+
+e
+
+$$Z^{SA} = \frac{Z_t}{\hat{S}_t}$$
+
+```{r}
+
+dat = read.table("D-IBV.txt")
+
+dat = read.csv("ICV.csv", header = TRUE)
+
+
+```

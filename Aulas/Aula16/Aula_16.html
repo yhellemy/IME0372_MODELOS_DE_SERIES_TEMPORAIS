@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aula 16 - Modelos de Espaço de Estados</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Aula 16 - Modelos de Espaço de Estados
+## Material fortemente baseado no livro de Morettin e Toloi (2004) e no material didático do curso EE363: Linear Dynamical Systems (Prof.Stephen P. Boyd, Stanford)
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-07-14)
+
+---
+
+class: middle
+##Introdução (Glaura Franco e Dani Gammerman)
+
+- A metodologia de *modelos estruturais*, ou *modelos dinâmicos*, é uma das várias abordagens existentes para a modelagem de séries temporais. 
+
+- A premissa básica destes modelos consiste em admitir a existência de componentes não
+observáveis de tendência, sazonalidade, ciclo e ruído aleatório.
+
+- A ideia dessa decomposição da série temporal surgiu nos trabalhos de Holt (1957) e Winters (1960) que desenvolveram as tecnicas de alisamento exponencial.
+
+- Os primeiros modelos estruturais surgiram na década de 60 com os trabalhos de  Muth (1960), Theil &amp; Wage (1964) e Nervole &amp; Wage (1964). 
+
+- No entanto, mediante a dificuldade computacional da época e do aparecimento da metodologia Box &amp; Jenkins (1976), a ideia de decomposição em componentes não observáveis só voltaram a ser desenvolvidas no final da década de 80.
+
+---
+class: middle
+##Introdução (Glaura Franco  e Dani Gammerman)
+
+- A principal vantagem dos modelos propostos a partir da década de 80 é que ao invés de ajustar funções que descrevem os componentes não observáveis aos dados históricos,
+
+- Estes procedimentos procuram identificar os componentes básicos na série e o modelo resultante é obtido a partir da composição desses elementos.
+
+- Ou seja, este tipo de modelo supõe que os movimentos característicos de uma série temporal `\(\left\{ Z_t \right\}, t = 1,...n\)`, podem ser decompostos em componentes não-observáveis, como por exemplo, tendência, sazonalidade, componente cíclica e componente aleatória ou erro. 
+
+- **Esses modelos estruturais são então escritos na forma de espaço de estados** e permitem a utilização do filtro de Kalman (1960).
+
+
+---
+class: middle
+##Definição de Modelos Estruturais
+
+Um modelo estrutural pode ser definido da seguinte forma
+
+`$$Z_t = \mu_t + S_t + \epsilon_t,$$`
+em que `\(\mu_t, S_t, \epsilon_t\)` são os componentes não observáveis tendência, 
+sazonalidade e erro aleatório; respectivamente. Admitimos que `\(\epsilon_t\)` 
+são independentes entre si.
+
+---
+class: middle
+##Modelo de Nível Local (MNL)
+
+- É o modelo estrutural mais simples e é adequado quando o nível da série muda 
+com o tempo de acordo com um passeio aleatório, isto é
+
+`\begin{align}
+Z_t =&amp; \mu_t + \epsilon_t, \phantom{111} t = 1, \ldots, N, \\
+\mu_t =&amp; \mu_{t-1} + \eta_t, \phantom{111} t = 1, \ldots, N.
+\end{align}`
+em que `\(\epsilon \sim N(0,\sigma_{\epsilon}^2)\)`, `\(\eta_t \sim N(0, \sigma^2_{\eta})\)` independentes e não correlacionadas entre si.
+
+
+---
+class: middle
+##Modelo de tendência local
+
+- Esse modelo é descrito pelas seguintes equações:
+
+`\begin{align}
+Z_t   =&amp; \mu_t + \epsilon_t \\
+\mu_t =&amp; \mu_{t-1} + \beta_{t-1} + \eta_t \\
+\beta_t =&amp; \beta_{t-1} + \xi_t.
+\end{align}`
+em que `\(\epsilon_t \sim N(0,\sigma^2_{\epsilon})\)`, 
+`\(\eta_t \sim N(0,\sigma^2_{\eta})\)` e `\(\xi_t \sim N(0,\sigma^2_{\xi})\)`
+com `\(\eta_t\)` e `\(\xi_t\)` mutuamente não 
+correlacionados e não correlacionados com `\(\epsilon_t\)`, `\(\mu_t\)` é denominado
+nível local e `\(\beta_t\)` a inclinação local.
+
+---
+class: middle
+##Modelo de tendência local - Casos Particulares
+
+1.  Nível local ou passeio aleatório + ruído; neste caso `\(\beta_t = 0\)`.
+
+2.  Nível local com "drift"; neste caso `\(\sigma_{\xi}^2 = 0\)`.
+
+3.  Tendência suave; neste caso `\(\sigma_{\eta}^2 = 0\)`.
+
+4.  Tendência determinística; neste caso `\(\sigma_{\eta}^2 = \sigma_{\xi}^2 = 0\)`.
+
+####Obs:
+
+- A especificação da tendência é baseada em informações a priori da série e/ou no gráfico das observações.
+
+- Na dúvida estima-se o modelo geral e testa-se a significância de cada componente no vetor de estados. Em particular, se `\(\sigma_{\xi}^2 = 0\)`, podemos testar se `\(\beta\)`, agora fixo, também é zero.
+
+
+
+---
+class: middle
+##Modelo Estrutural Básico
+
+- O modelo estrutural básico é definido por meio de:
+
+`\begin{align}
+Z_t   =&amp; \mu_t + \gamma_t + \epsilon_t \\
+\mu_t =&amp; \mu_{t-1} + \beta_{t-1} + \eta_t \\
+\beta_t =&amp; \beta_{t-1} + \xi_t. \\
+\gamma_t =&amp; - S_{t-1} - \ldots - S_{t-s+1} + \omega_t
+\end{align}`
+assumindo que `\(t = 1, \ldots, n\)` e que `\(s\)` refere-se ao número de períodos 
+sazonais, `\(\epsilon_t \sim N(0,\sigma^2_{\epsilon})\)`, 
+`\(\eta_t \sim N(0,\sigma^2_{\eta})\)`, `\(\xi_t \sim N(0,\sigma^2_{\xi})\)` e
+`\(\omega_t \sim N(0,\sigma_{\omega}^2)\)`, 
+
+- com `\(\epsilon_t\)`, `\(\omega_t\)`, `\(\eta_t\)` e `\(\xi_t\)` são ruídos brancos mutuamemte não 
+correlacionados.
+
+
+---
+class: inverse, middle, center
+##Representação em espaço de estados
+
+
+---
+class: middle
+##Representação em espaço de estados
+
+- Todo modelo linear de séries temporais `\(q\)`-dimensionais tem representação em espaço de estados.
+
+- Essa representação relaciona o vetor de observações `\(\left\{ Z_t \right\}\)` e o vetor de ruídos `\(\nu_t\)`, através de um processo de Markov `\(\left\{ X_t \right\}\)`, `\(p\)` dimensional, denominado vetor de estados.
+
+- O modelo de espaço de estados é constituídos por duas equações: a equação de observação e a equação de estados.
+
+
+---
+class: middle
+##Representação em espaço de estados
+
+- Matematicamente, o modelo de espaço de estados para uma série temporal univariada pode ser representado da seguinte maneira:
+
+`\begin{align}
+Z_t   =&amp; \mathbf{A} \mathbf{X}_t + \nu_t \\
+\mathbf{X}_{t+1}  =&amp; \mathbf{G} \mathbf{X}_{t}  + \mathbf{w}_t, \phantom{11} t = 1, \ldots, N.
+\end{align}`
+
+em que `\(\mathbf{A}\)` é a matriz do sistema, de ordem `\((q \times p)\)`;
+
+- `\(\nu_t\)` é o ruído de observação, de ordem `\((q \times 1)\)`, não correlacionado, com média zero e variância `\(\mathbf{R}\)`;
+
+- `\(\mathbf{G}\)` é a matriz de transição, de ordem  `\((p \times p)\)` e 
+
+- `\(\mathbf{w}_t\)` é um vetor de ruídos não correlacionados, representando a perturbação do sistema, de ordem `\((p \times 1)\)`, com média zero e matriz de covariâncias `\(\textbf{Q}\)`.
+
+- Para séries univariadas tem-se `\(q=1\)`.
+
+---
+class: middle
+##Representação em espaço de estados
+
+- No modelo de espaço de estados assume-se que:
+
+- O estado inicial `\(\mathbf{X}_0\)` tem média `\(\boldsymbol{\mu}_0\)` e matriz de covariâncias `\(\boldsymbol{\Sigma}_0\)`;
+
+- `\(\nu_t \perp \mathbf{X}_t \phantom{11} \forall \phantom{1} t\)`, `\(\mathbf{w}_t \perp \mathbf{X}_0, \ldots, \mathbf{X}_1\)` e `\(\mathbf{w}_t \perp Z_0, \ldots, Z_t.\)`
+
+- Dizemos que o modelo de espaço de estados é gaussiano quando vetores de ruídos forem normalmente distribuídos. 
+
+- Como `\(\mathbf{X}_t\)` e `\(Z_t\)` são combinações lineares de `\(\nu_t\)` e `\(\mathbf{w}_t\)`, 
+a distribuição conjunta de `\((X_0, w_1, \ldots, w_t, \nu_1, \ldots, \nu_t)\)` é Gaussiana. 
+
+- O vetor `\(\mathbf{A}\)` e a matriz `\(\mathbf{G}\)` são não estocásticas; assim se houver variação no tempo estes serão pré-determinados.
+
+- A distribuição `\(f(\mathbf{X}_t | Z_1, \ldots, Z_s)\)` é Gaussiana com média igual a `\(\mathbf{X}_t^s =  E[\mathbf{X}_t| Z_1, \ldots, Z_s]\)` e variância igual a `\(\mathbf{P}_t^s =  E[(\mathbf{X}_t - \mathbf{X}_t^s)(\mathbf{X}_t - \mathbf{X}_t^s)^{'}| Z_1, \ldots, Z_s].\)`
+
+
+---
+class: inverse, middle, center
+##Filtro de Kalman
+
+
+
+---
+class: middle
+##Filtro de Kalman - Objetivo Geral
+
+- O objetivo é:
+
+- Estimar `\(\mathbf{X}_t^t\)`, ou seja, o valor médio do estado atual baseado e em observações passadas.
+
+- Predizer `\(\mathbf{X}_{t+1}^{t}\)`, ou seja, predizer o valor do estado no instante futuro `\(t+1\)` baseado no estado atual e em observações passadas.
+
+- Desde que `\(\mathbf{X}_t\)`, `\(Z_t\)` tem distribuição conjunta Gaussiana, a distribuição condicional de `\(\mathbf{X}_t\)` dado `\(\mathbf{Z}_t = \left\{Z_1, \ldots, Z_t\right\}\)` é Gaussiana com esperança dada por:
+
+`$$\mathbf{X}_t^t = \boldsymbol{\mu}_{\mathbf{X}_{t}} + \boldsymbol{\Sigma}_{\mathbf{X}_t \mathbf{Z}_t}\boldsymbol{\Sigma}_{\mathbf{Z}_t}^{-1}(\mathbf{Z_t} - \boldsymbol{\mu}_{\mathbf{Z}_t})$$`
+
+- O método do Filtro de Kalman é utilizado para calcular `\(\mathbf{X}_t^t\)` e `\(\mathbf{X}_{t+1}^t\)`, recursivamente. 
+
+---
+class: middle
+##Filtro de Kalman - Derivação
+
+Inicialmente, temos que a Esperança e Variância Marginal de `\(\mathbf{X}_t\)` é dada por:
+
+`\begin{align}
+\boldsymbol{\mu}_{\mathbf{X}_{t+1}} =&amp; E[\mathbf{X}_{t+1}] \\
+=&amp; E[\mathbf{G}\mathbf{X}_{t} + \mathbf{w}_t ] \\
+=&amp; E[\mathbf{G}\mathbf{X}_{t}] + E[\mathbf{w}_t ] \\
+=&amp; \mathbf{G}E[\mathbf{X}_{t}] \\
+=&amp; \mathbf{G}\boldsymbol{\mu}_{\mathbf{X}_{t}}.
+\end{align}`
+e
+
+`\begin{align}
+\boldsymbol{\Sigma}_{\mathbf{X}_{t+1}} =&amp; Var[\mathbf{X}_{t+1}] \\
+=&amp; Var[\mathbf{G}\mathbf{X}_{t} + \mathbf{w}_t ] \\
+=&amp; Var[\mathbf{G}\mathbf{X}_{t}] + Var[\mathbf{w}_t ]  \phantom{11} \mbox{desde que}  \phantom{11} \mathbf{w}_t \phantom{11} \mbox{e} \phantom{11} \mathbf{X}_{t} \phantom{11} \mbox{são independentes.} \\
+=&amp; \mathbf{G}Var[\mathbf{X}_{t}]\mathbf{G}^{'} + \mathbf{Q} \\
+=&amp; \mathbf{G}\boldsymbol{\Sigma}_{t}\mathbf{G}^{'} + \mathbf{Q}.
+\end{align}`
+
+
+
+
+
+---
+class: middle
+##Filtro de Kalman - Derivação
+
+- Para obter as expressões de interesse, vamos determinar `\(\mathbf{X}_t^t\)` e `\(\mathbf{P}_t^t\)` em termos `\(\mathbf{X}_{t}^{t-1}\)` e `\(\mathbf{P}_{t}^{t-1}.\)` 
+
+- Vamos iniciar com a distribuição de `\(\mathbf{X}_t | \mathbf{Z}_{t-1}\)` e `\(Z_{t} | \mathbf{Z}_{t-1}\)`.
+
+- Nesse caso, 
+
+
+`\begin{eqnarray}
+\left[
+\begin{array}{c}
+\mathbf{X}_t | \mathbf{Z}_{t-1}\\
+Z_{t} | \mathbf{Z}_{t-1}  
+\end{array} \right]
+\sim 
+N \left(
+  \left[
+    \begin{array}{c}
+    \mathbf{X}_t^{t-1} \\
+    \mathbf{A X}_t^{t-1}
+    \end{array} \right], 
+  \left[
+    \begin{array}{cc}
+    \mathbf{P}_t^{t-1} &amp; \mathbf{P}_t^{t-1}\mathbf{A}^{'} \\
+      \mathbf{A}\mathbf{P}_t^{t-1} &amp; \mathbf{A}\mathbf{P}_t^{t-1}\mathbf{A}^{'} + \mathbf{R}
+    \end{array} \right] \right).
+\end{eqnarray}`
+
+---
+class: middle
+##Filtro de Kalman - Derivação
+
+Pois, 
+`\begin{align}
+E[Z_t|\mathbf{Z}_{t-1}] =&amp; E[\mathbf{A} \mathbf{X}_t + \nu_t|\mathbf{Z}_{t-1}] \\
+               =&amp; \mathbf{A}E[ \mathbf{X}_t|\mathbf{Z}_{t-1} ] + E[\nu_t|\mathbf{Z}_{t-1}] \\
+               =&amp;  \mathbf{A}E[ \mathbf{X}_t |\mathbf{Z}_{t-1}] + E[\nu_t] =  \mathbf{A}\mathbf{X}_{t}^{t-1},
+\end{align}`
+
+
+`\begin{align}
+Var[Z_t|\mathbf{Z}_{t-1}] =&amp; Var[\mathbf{A} \mathbf{X}_t + \nu_t|\mathbf{Z}_{t-1}] \\
+               =&amp; Var[\mathbf{A} \mathbf{X}_t |\mathbf{Z}_{t-1}] + Var[\nu_t|\mathbf{Z}_{t-1}] \\
+               =&amp;  \mathbf{A}Var[ \mathbf{X}_t |\mathbf{Z}_{t-1} ]\mathbf{A}^{'}+ Var[\nu_t] = \mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R}
+\end{align}`
+e
+
+`\begin{align}
+Cov[Z_t, \mathbf{X}_t |\mathbf{Z}_{t-1}] =&amp; Cov[\mathbf{A} \mathbf{X}_t + \nu_t,\mathbf{X}_t  |\mathbf{Z}_{t-1}] \\
+               =&amp; \mathbf{A}Cov[ \mathbf{X}_t, \mathbf{X}_t  |\mathbf{Z}_{t-1}]  + Cov[ \nu_t, \mathbf{X}_t  |\mathbf{Z}_{t-1}]\\
+               =&amp;  \mathbf{A}Cov[ \mathbf{X}_t, \mathbf{X}_t  |\mathbf{Z}_{t-1}] \\
+                =&amp;  \mathbf{A}Var[ \mathbf{X}_t |\mathbf{Z}_{t-1}] = \mathbf{A}\mathbf{P}_{t}^{t-1}.
+\end{align}`
+
+
+---
+class: middle
+##Filtro de Kalman - Derivação
+
+
+- Portanto, a distribuição condicional de `\(\mathbf{X}_t|\mathbf{Z}_{t-1}\)` dado `\(Z_t|\mathbf{Z}_{t-1}\)` é gaussiana com média dada por:
+
+`$$\mathbf{X}_{t}^{t} =  \mathbf{X}_{t}^{t-1} + \mathbf{P}_{t}^{t-1}\mathbf{A}^{'}(\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R})^{-1}(Z_t - \mathbf{A}\mathbf{X}_{t}^{t-1})$$`
+e variância
+
+
+`\begin{align}
+\mathbf{P}_{t}^{t} =&amp;  \mathbf{P}_{t}^{t-1} - \mathbf{P}_{t}^{t-1}\mathbf{A}^{'}(\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R})^{-1}\mathbf{A}\mathbf{P}_{t}^{t-1}) \\
+=&amp; \left[\mathbf{I} - \mathbf{P}_{t}^{t-1}\mathbf{A}^{'} (\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R})^{-1}\mathbf{A}\right]\mathbf{P}_{t}^{t-1}
+\end{align}`
+
+---
+class: middle
+##Filtro de Kalman - Derivação
+
+Para computar `\(\mathbf{X}_{t+1}^{t}\)` e `\(\mathbf{P}_{t+1}^{t}\)`, verificamos que a distribuição de `\(\mathbf{X}_{t+1}^t\)` é Gaussiana com média dada por:
+
+`\begin{align}
+\mathbf{X}^{t}_{t+1}=E[\mathbf{X}_{t+1}|\mathbf{Z}_t] =&amp; E[\mathbf{G}\mathbf{X}_t + \mathbf{w}_t|\mathbf{Z}_t] \\
+=&amp; \mathbf{G}E[\mathbf{X}_t|\mathbf{Z}_t] + E[\mathbf{w}_t|\mathbf{Z}_t] \\
+=&amp; \mathbf{G}E[\mathbf{X}_t|\mathbf{Z}_t] + E[\mathbf{w}_t] \\
+=&amp; \mathbf{G}\mathbf{X}_{t}^{t}.
+\end{align}`
+e variância dada por:
+
+`\begin{align}
+\mathbf{P}^{t}_{t+1}=Var[\mathbf{X}_{t+1}|\mathbf{Z}_t] =&amp; Var[\mathbf{G}\mathbf{X}_t + \mathbf{w}_t|\mathbf{Z}_t] \\
+=&amp; \mathbf{G}Var[\mathbf{X}_t|\mathbf{Z}_t]\mathbf{G}^{'} + Var[\mathbf{w}_t|\mathbf{Z}_t] \\
+=&amp; \mathbf{G}Var[\mathbf{X}_t|\mathbf{Z}_t]\mathbf{G}^{'} + Var[\mathbf{w}_t] \\
+=&amp; \mathbf{G}\mathbf{P}_{t}^{t}\mathbf{G}^{'} + \mathbf{Q}.
+\end{align}`
+
+
+---
+class: middle
+##Filtro de Kalman - Algoritmo
+
+- Admitindo condições iniciais `\(\mathbf{X}_0^0 = \boldsymbol{\mu}_0\)` e `\(\mathbf{P}_0^0 = \boldsymbol{\Sigma}_0\)`. Para `\(t = 1, \ldots, N.\)`; temos:
+
+`$$\mathbf{X}_{t}^{t} =  \mathbf{X}_{t}^{t-1} + \mathbf{P}_{t}^{t-1}\mathbf{A}^{'}(\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R})^{-1}(Z_t - \mathbf{A}\mathbf{X}_{t}^{t-1}),$$`
+
+`$$\mathbf{P}_{t}^{t} = \left[\mathbf{I} - \mathbf{P}_{t}^{t-1}\mathbf{A}^{'} (\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R})^{-1}\mathbf{A}\right]\mathbf{P}_{t}^{t-1},$$`
+
+
+`$$\mathbf{X}^{t}_{t+1} = \mathbf{G}\mathbf{X}_{t}^{t}$$` 
+e
+
+`$$\mathbf{P}^{t}_{t+1} =  \mathbf{G}\mathbf{P}_{t}^{t}\mathbf{G}^{'} + \mathbf{Q}.$$`
+
+---
+class: inverse, middle, center
+##Estimadores de Máxima Verossimilhança
+
+---
+class: middle
+##Função de Verossimilhança
+
+- A função de verossimilhança pode ser calculada através das quantidades obtidas pelo filtro de Kalman.
+
+- Suponha `\(Z_t | \mathbf{Z}_{t-1} \sim N(\mathbf{A}\mathbf{X}_{t}^{t-1},\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \sigma_{\nu}^2\mathbf{I})\)` e considere agora `\(\epsilon_t = Z_t - E[Z_t|\mathbf{Z}_{t-1}]\)`. Dessa forma, temos:
+
+`\begin{align}
+  E[\epsilon_t] =&amp; E[Z_t - E[Z_t|\mathbf{Z}_{t-1}]] \\
+  =&amp; E[Z_t] - E[E[Z_t|\mathbf{Z}_{t-1}]] \\
+  =&amp; E[Z_t] - E[Z_t] \\
+  =&amp; 0.
+\end{align}`
+
+`\begin{align}
+  Var[\epsilon_t] =&amp; Var[Z_t - E[Z_t|\mathbf{Z}_{t-1}]] \\
+  =&amp; Var[Z_t - E[Z_t|\mathbf{Z}_{t-1}]] \\
+  =&amp; Var[\mathbf{A}\mathbf{X}_{t} + \nu_t - \mathbf{A}\mathbf{X}_{t}^{t-1}] \\
+  =&amp; Var[\mathbf{A}(\mathbf{X}_{t} - \mathbf{X}_{t}^{t-1})] + Var[\nu_t ] \\
+  =&amp; \mathbf{A}Var[(\mathbf{X}_{t} - \mathbf{X}_{t}^{t-1})]\mathbf{A}^{'} + \mathbf{R} 
+\end{align}`
+
+---
+class: middle
+##Função de Verossimilhança
+
+- Lembrando que 
+
+`\begin{align}
+E[\mathbf{X}_t - \mathbf{X}_{t}^{t-1}] =&amp; E[\mathbf{X}_t] - E[E[\mathbf{X}_t^{t-1}]] \\
+=&amp; E[\mathbf{X}_t] - E[E[\mathbf{X}_t|\mathbf{Z}_{t-1}]]  \\
+=&amp;  E[\mathbf{X}_t] - E[\mathbf{X}_t] = \mathbf{0}
+\end{align}`
+
+
+Por consequência, 
+
+`\begin{align}
+Var[(\mathbf{X}_{t} - \mathbf{X}_{t}^{t-1})] =&amp; E[(\mathbf{X}_t - \mathbf{X}_{t}^{t-1})(\mathbf{X}_t - \mathbf{X}_{t}^{t-1})^{'} ] \\
+=&amp;  E[(\mathbf{X}_t - \mathbf{X}_{t}^{t-1})(\mathbf{X}_t - \mathbf{X}_{t}^{t-1})^{'}|\mathbf{Z}_{t-1} ] = \mathbf{P}_{t}^{t-1}
+\end{align}`
+
+Logo,
+
+
+`\begin{align}
+ \boldsymbol{\Sigma}_{\epsilon_t} = Var[\epsilon_t] = \mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R}. 
+\end{align}`
+
+---
+class: middle
+##Função de Verossimilhança
+
+Assim, podemos definir o logaritmo da função de verossimilhança da seguinte forma
+
+`$$l = -\frac{1}{2}\sum_{t=1}^N\log|\boldsymbol{\Sigma}_{\epsilon_t}| - \frac{1}{2}\sum_{t=1}^N \boldsymbol{\epsilon}_t^{'}\boldsymbol{\Sigma}_{\epsilon_t}^{-1}\boldsymbol{\epsilon}_t,$$`
+
+- Nesse caso, o logaritmo da função de verossmilhança é não linear com relação aos parâmetros, então métodos numéricos devem ser adotados.
+
+
+---
+class: inverse, middle, center
+##Exemplos Práticos no R
+
+
+---
+class: middle
+##Exemplos 1 - Série `\(A_{10}\)`
+
+- Como primeiro exemplo vamos analisar a Série `\(A_{10}\)`: Índice de Custo de Vida no Município de São Paulo; observações mensais de janeiro de 1970 a junho de 1980.
+
+- O primeiro passo seria plotar a série para verificar qual modelo estrutural é o mais adequado.
+
+---
+class: middle
+##Exemplos 1 - Série `\(A_{10}\)`
+
+
+![](Aula_16_files/figure-html/unnamed-chunk-1-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Exemplos 1 - Série `\(A_{10}\)`
+
+- Analisando os gráficos dos slides anteriores, decidiu-se utilizar o modelo estrutural de tendência local para os dados em escala logaritmica.
+
+####Modelo Estrutural
+
+`\begin{align}
+Z_t   =&amp; \mu_t + \epsilon_t \\
+\mu_t =&amp; \mu_{t-1} + \beta_{t-1} + \eta_t \\
+\beta_t =&amp; \beta_{t-1} + \xi_t.
+\end{align}`
+
+####Modelo Estrutural na Forma de Espaço de Estados
+
+`\begin{eqnarray}
+Z_t =&amp; 
+\left[
+\begin{array}{cc}
+1 &amp; 0
+\end{array} \right]
+\left[
+\begin{array}{c}
+\mu_t \\
+\beta_t
+\end{array} \right] + \epsilon_t \\
+\left[
+\begin{array}{c}
+\mu_t \\
+\beta_t
+\end{array} \right] =&amp;
+\left[
+\begin{array}{cc}
+1 &amp; 1 \\
+0 &amp; 1
+\end{array} \right]
+\left[
+\begin{array}{c}
+\mu_{t-1} \\
+\beta_{t-1}
+\end{array} \right] +
+\left[
+\begin{array}{c}
+\eta_{t} \\
+\xi_{t-1}
+\end{array} \right]
+\end{eqnarray}`
+
+
+
+
+####Estimativas dos Parâmetros de Variâncias
+
+```
+## Transitional variance: 0.0001054708 
+##  Slope variance: 8.153826e-06 
+##  Observational variance: 0
+```
+
+---
+class: middle
+
+###Valores preditos dos estados latentes
+
+
+```
+##   Obs Pred.level Pred.slope
+## 1 120   6.955593 0.05124951
+## 2 121   6.999422 0.04945347
+## 3 122   7.032624 0.04551952
+## 4 123   7.074963 0.04474962
+## 5 124   7.120444 0.04492670
+## 6 125   7.177019 0.04774619
+## 7 126   7.225481 0.04791963
+```
+
+####Teste de Ljung Box
+
+
+```
+## 
+## 	Box-Pierce test
+## 
+## data:  mod$residuals
+## X-squared = 0.013729, df = 1, p-value = 0.9067
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

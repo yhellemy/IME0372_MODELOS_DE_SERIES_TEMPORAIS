@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Trabalhos sobre Tendência e Sazonalidade</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Trabalhos sobre Tendência e Sazonalidade
+## Alguns comentários
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-07-10)
+
+---
+
+class: middle, inverse, center
+#Revisão de literatura sobre conceito de sazonalidade
+
+---
+class: middle, 
+###Revisão de literatura sobre conceito de sazonalidade
+
+####Morettin e Toloi 2004
+
+- "Empiricamente, consideramos como sazonais os fenômenos que ocorrem regularmente de ano para ano, como aumento de vendas de passagens aéreas no verão, aumento da produção de leite no Brasil nos meses de novembro, dezembro, e janeiro, aumento de vendas no comércio na época do Natal e etc" (Morettin &amp; Toloi, 2004).
+
+####Rob Hyndman
+
+- "A seasonal pattern exists when a series is influenced by seasonal factors (e.g., the quarter of the year, the month, or day of the week). Seasonality is always of a fixed and known period. Hence, seasonal time series are sometimes called periodic time series" [rob hyndman](https://robjhyndman.com/hyndsight/cyclicts/).
+
+- A cyclic pattern exists when data exhibit rises and falls that are not of fixed period. The duration of these fluctuations is usually of at least 2 years. Think of business cycles which usually last several years, but where the length of the current cycle is unknown beforehand [rob hyndman](https://robjhyndman.com/hyndsight/cyclicts/)..
+
+---
+class: middle, 
+###Revisão de literatura sobre conceito de sazonalidade
+
+####Willian Wei 2005
+
+- "Many business and economic time series contain a seasonal phenomenon that repeats itself after a regular period of time. The smallest time period for this repetitive phenomenon is called the seasonal period." 
+
+- "For example, the quartely series of ice-cream sales is high each summer, and the series repeats this phenomenon each year giving a seasonal period of 4".  
+
+####Box &amp; Jenkins 1976
+
+-  "In general, we say that a series exhibits periodic behavior with period s, when similarities in the series occur after `\(s\)` basic time intervals" (Box &amp; Jenkins, 1976.)
+
+####Douglas Montgomery 2005
+
+- Seasonality is the component of time series behavior that repeats on a regular basis, such as each year.
+
+
+---
+class: middle, center, inverse
+#Análise de Dados
+
+      
+---
+class: middle
+#Introdução
+
+
+
+- Nessa aula serão feitos algumas analises sobre tendências e sazonalidade.
+
+- As análises foram feitas a partir dos trabalhos feitos pelos alunos dessa disciplina.
+
+
+
+
+---
+class: middle
+###Análise  1 - Série `\(A_{11}\)`
+
+- Considere a Série `\(A_{11}\)` (Consumo). Vendas físicas na região metropolitana de São Paulo, observações mensais de janeiro de 1984 a dezembro de 1995.
+
+#####Obs:
+
+- A série original têm observações mensais de janeiro de 1984 a outubro de 1996. No entanto, eu vou seguir a sugestão feita pelos alunos.
+
+###Objetivo da Análise
+
+a.  Estimar o componente de tendência `\(T_t\)` no modelo. 
+
+b.  Obter uma série livre de tendência 
+
+c.  Estimar o componente de sazonalidade. 
+
+d.  Obter uma série livre de sazonalidade.
+
+---
+class: middle
+#Gráfico da Série
+
+
+![](Trabalho_1_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+#Estimar Tendência 
+
+- Considere o seguinte modelo de decomposição: `\(Z_t = T_t + S_t + a_t\)`,
+
+- Para estimar, vou usar o método de média móveis, pois, não consigo visualizar qualquer função matemática que relacione o consumo das vendas com o tempo. 
+
+- Vou experimentar aqui alguns valores ad hoc para `\(n\)`: `\(\left\{3,7,13\right\}\)`. 
+
+- Não vou utilizar critério de Erro Quadrático Médio, pois, minha intenção é estimar a tendência e, não, necessariamente fazer a previsão.
+
+---
+class: middle
+#Estimar Tendência 
+
+
+
+```
+## # A tibble: 144 x 5
+##    data       consumo mm3      mm7      mm13    
+##    &lt;date&gt;       &lt;dbl&gt; &lt;ts&gt;     &lt;ts&gt;     &lt;ts&gt;    
+##  1 1984-01-01    114.       NA       NA       NA
+##  2 1984-02-01    111. 113.7933       NA       NA
+##  3 1984-03-01    116. 112.9400       NA       NA
+##  4 1984-04-01    112. 116.2300 116.5757       NA
+##  5 1984-05-01    121. 117.7933 118.4171       NA
+##  6 1984-06-01    121. 121.0267 121.0243       NA
+##  7 1984-07-01    121. 123.1467 123.4300 125.8477
+##  8 1984-08-01    127. 125.7767 126.1486 125.8415
+##  9 1984-09-01    129. 129.7867 134.5386 127.3654
+## 10 1984-10-01    133. 130.9800 134.4657 127.5038
+## # … with 134 more rows
+```
+
+
+---
+class: middle
+#Estimar Tendência 
+
+
+![](Trabalho_1_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+#Série Livre de Tendência 
+
+![](Trabalho_1_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+#Série Livre de Tendência 
+
+![](Trabalho_1_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+#Gráfico de Séries Temporais - Sazonalidade
+
+![](Trabalho_1_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+#Gráfico de Séries Temporais - Sazonalidade
+
+![](Trabalho_1_files/figure-html/unnamed-chunk-8-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+#Estimar Sazonalidade
+
+- Nessa parte do exercício, vou utilizar a sazonalidade estocástica, termo usado no livro de Morettin &amp; Toloi (2004).
+
+- Justificativa: "O método de médias móveis é apropriado quando temos uma série temporal cuja componente sazonal varia com o tempo, ou seja, para séries cuja sazonalidade é estocástica. Todavia, este procedimento é aplicado usualmente mesmo para padrão sazonal constante" (Morettin &amp; Toloi, 2004). O que se observa em séries sazonais são as relações:
+
+a. entre observações para meses sucessivos em um ano particular:
+
+b. entre as observações para o mesmo mes em anos sucessivos.
+
+- Como vimos na aula, considerando o modelo de decomposição
+
+`$$Z_t = T_t + S_t + a_t,$$`
+
+ao estimarmos `\(T_t\)`, por meio de `\(\hat{T}_t\)`, teremos uma série residual `\(Y_t = Z_t - \hat{T}_t.\)` Esta série fornecerá meios para estimar `\(S_t\)`.
+
+---
+class: middle
+#Estimar Sazonalidade
+
+- Primeiro passo, obter as séries residuais
+
+
+```
+## # A tibble: 144 x 5
+##    data       consumo   mes tend     residuo 
+##    &lt;date&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;ts&gt;     &lt;ts&gt;    
+##  1 1984-01-01    114.     1       NA       NA
+##  2 1984-02-01    111.     2       NA       NA
+##  3 1984-03-01    116.     3       NA       NA
+##  4 1984-04-01    112.     4       NA       NA
+##  5 1984-05-01    121.     5       NA       NA
+##  6 1984-06-01    121.     6       NA       NA
+##  7 1984-07-01    121.     7       NA       NA
+##  8 1984-08-01    127.     8 125.3780 1.642000
+##  9 1984-09-01    129.     9 125.6533 3.386667
+## 10 1984-10-01    133.    10 127.9700 5.330000
+## # … with 134 more rows
+```
+
+
+
+---
+class: middle
+#Estimar Sazonalidade
+
+- Segundo passo, calcular médias dos meses: janeiros, fevereiros e etc ... `\(\bar{Y}_{.j} = \frac{1}{n_j} \sum_{i=1}^{n_{ij}} Y_{ij}, \phantom{11} j = 1, \ldots, 12.\)`
+
+####Média dos meses
+
+```
+##     jan     fev     mar     abr     mai     jun     jul     ago     set     out 
+## -15.464 -18.647  -7.539 -10.576  -0.503  -8.912   1.096   8.028   2.457   5.072 
+##     nov     dez 
+##   3.049  42.969
+```
+
+---
+class: middle
+#Estimar Sazonalidade
+
+- Estimar as estimativas das constantes sazonais `\(\hat{S}_j = \bar{Y}_{.j} - \bar{Y}\)`.
+
+
+####Média Geral
+
+```
+## [1] 0.086
+```
+
+
+####Estimar componentes sazonalidades
+
+```
+##     jan     fev     mar     abr     mai     jun     jul     ago     set     out 
+## -15.550 -18.732  -7.625 -10.662  -0.589  -8.998   1.011   7.942   2.371   4.986 
+##     nov     dez 
+##   2.963  42.883
+```
+
+
+---
+class: middle
+#Série Livre de Sazonalidade
+
+ - Uma vez que conseguimos estimar `\(\hat{S}_j\)`, podemos escrever o modelo de decomposição da seguinte maneira:
+ 
+`$$Z_t = T_t + S_j + a_t.$$` 
+com `\(t = 12i + j,\)` `\(i = 0, 1, \ldots, p-1\)`, `\(j = 1, \ldots, 12.\)`
+
+---
+class: middle
+#Série Livre de Sazonalidade
+
+![](Trabalho_1_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

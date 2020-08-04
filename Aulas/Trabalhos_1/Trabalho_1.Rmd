@@ -1,0 +1,364 @@
+---
+title: "Trabalhos sobre Tendência e Sazonalidade "
+subtitle: "Alguns comentários"
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      
+---
+class: middle, inverse, center
+#Revisão de literatura sobre conceito de sazonalidade
+
+---
+class: middle, 
+###Revisão de literatura sobre conceito de sazonalidade
+
+####Morettin e Toloi 2004
+
+- "Empiricamente, consideramos como sazonais os fenômenos que ocorrem regularmente de ano para ano, como aumento de vendas de passagens aéreas no verão, aumento da produção de leite no Brasil nos meses de novembro, dezembro, e janeiro, aumento de vendas no comércio na época do Natal e etc" (Morettin & Toloi, 2004).
+
+####Rob Hyndman
+
+- "A seasonal pattern exists when a series is influenced by seasonal factors (e.g., the quarter of the year, the month, or day of the week). Seasonality is always of a fixed and known period. Hence, seasonal time series are sometimes called periodic time series" [rob hyndman](https://robjhyndman.com/hyndsight/cyclicts/).
+
+- A cyclic pattern exists when data exhibit rises and falls that are not of fixed period. The duration of these fluctuations is usually of at least 2 years. Think of business cycles which usually last several years, but where the length of the current cycle is unknown beforehand [rob hyndman](https://robjhyndman.com/hyndsight/cyclicts/)..
+
+---
+class: middle, 
+###Revisão de literatura sobre conceito de sazonalidade
+
+####Willian Wei 2005
+
+- "Many business and economic time series contain a seasonal phenomenon that repeats itself after a regular period of time. The smallest time period for this repetitive phenomenon is called the seasonal period." 
+
+- "For example, the quartely series of ice-cream sales is high each summer, and the series repeats this phenomenon each year giving a seasonal period of 4".  
+
+####Box & Jenkins 1976
+
+-  "In general, we say that a series exhibits periodic behavior with period s, when similarities in the series occur after $s$ basic time intervals" (Box & Jenkins, 1976.)
+
+####Douglas Montgomery 2005
+
+- Seasonality is the component of time series behavior that repeats on a regular basis, such as each year.
+
+
+---
+class: middle, center, inverse
+#Análise de Dados
+
+      
+---
+class: middle
+#Introdução
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(ggpmisc)
+library(knitr)
+library(kableExtra)
+library(lubridate)
+library(zoo)
+library(httr)
+library(xlsx)
+library(fpp2)
+library(tsibble)
+```
+
+- Nessa aula serão feitos algumas analises sobre tendências e sazonalidade.
+
+- As análises foram feitas a partir dos trabalhos feitos pelos alunos dessa disciplina.
+
+
+
+
+---
+class: middle
+###Análise  1 - Série $A_{11}$
+
+- Considere a Série $A_{11}$ (Consumo). Vendas físicas na região metropolitana de São Paulo, observações mensais de janeiro de 1984 a dezembro de 1995.
+
+#####Obs:
+
+- A série original têm observações mensais de janeiro de 1984 a outubro de 1996. No entanto, eu vou seguir a sugestão feita pelos alunos.
+
+###Objetivo da Análise
+
+a.  Estimar o componente de tendência $T_t$ no modelo. 
+
+b.  Obter uma série livre de tendência 
+
+c.  Estimar o componente de sazonalidade. 
+
+d.  Obter uma série livre de sazonalidade.
+
+---
+class: middle
+#Gráfico da Série
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+dat = read.csv("consumo.csv", header = TRUE)
+dat = as_tibble(dat)
+dat$data = seq(ymd("1984-01-01"), ymd("1996-10-01"), by="month")
+dat  = filter(dat, data <= as.Date("1995-12-01"))
+
+ggplot(dat) + geom_path(aes(x=data,y=consumo))+theme_bw() + xlab('Data (Mensal)') +
+  ylab('Consumo')
+```
+
+
+---
+class: middle
+#Estimar Tendência 
+
+- Considere o seguinte modelo de decomposição: $Z_t = T_t + S_t + a_t$,
+
+- Para estimar, vou usar o método de média móveis, pois, não consigo visualizar qualquer função matemática que relacione o consumo das vendas com o tempo. 
+
+- Vou experimentar aqui alguns valores ad hoc para $n$: $\left\{3,7,13\right\}$. 
+
+- Não vou utilizar critério de Erro Quadrático Médio, pois, minha intenção é estimar a tendência e, não, necessariamente fazer a previsão.
+
+---
+class: middle
+#Estimar Tendência 
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+mutate(dat,mm3 = ma(dat$consumo, order = 3, centre=FALSE),
+           mm7 = ma(dat$consumo, order = 7, centre=FALSE),
+           mm13= ma(dat$consumo, order = 13, centre=FALSE))
+```
+
+
+---
+class: middle
+#Estimar Tendência 
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+
+dat2 = tibble(data = rep(dat$data,4),
+             consumo = c(dat$consumo,
+                         ma(dat$consumo, order = 3, centre=FALSE),
+                         ma(dat$consumo, order = 7, centre = FALSE),
+                         ma(dat$consumo, order = 13, centre = FALSE)
+                         ),
+              obs_estimadores = c(rep("consumo",nrow(dat)),
+                        rep("mm3",nrow(dat)),
+                        rep("mm7",nrow(dat)),
+                        rep("mm13",nrow(dat))
+                        )
+)
+ggplot(dat2, aes(data, consumo)) + 
+  #geom_point(position=position_jitter(1,3), pch=21, fill="#FF0000AA") +
+  geom_line(aes(y=consumo,col= obs_estimadores )) +  theme_bw() + xlab('Data (Mensal)') + 
+  ylab('Consumo')
+  
+  
+
+
+```
+
+
+---
+class: middle
+#Série Livre de Tendência 
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+
+dat3.1 = tibble(data = rep(dat$data,3),
+             consumo = c(dat$consumo,
+                        ma(dat$consumo, order = 3, centre = FALSE),
+                        dat$consumo -  ma(dat$consumo, order = 3, centre = FALSE)
+                         ),
+              obs_estimadores = c(rep("consumo",nrow(dat)),
+                                  rep("mm3",nrow(dat)),
+                                  rep("Livre_Tendencia",nrow(dat))
+                        )
+)
+ggplot(dat3.1, aes(data, consumo)) + 
+  #geom_point(position=position_jitter(1,3), pch=21, fill="#FF0000AA") +
+  geom_line(aes(y=consumo,col= obs_estimadores )) +  theme_bw() + xlab('Data (Mensal)') + 
+  ylab('Consumo')
+  
+  
+
+
+
+```
+
+---
+class: middle
+#Série Livre de Tendência 
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+
+dat3 = tibble(data = rep(dat$data,3),
+             consumo = c(dat$consumo,
+                        ma(dat$consumo, order = 13, centre = FALSE),
+                        dat$consumo -  ma(dat$consumo, order = 13, centre = FALSE)
+                         ),
+              obs_estimadores = c(rep("consumo",nrow(dat)),
+                                  rep("mm13",nrow(dat)),
+                                  rep("Livre_Tendencia",nrow(dat))
+                        )
+)
+ggplot(dat3, aes(data, consumo)) + 
+  #geom_point(position=position_jitter(1,3), pch=21, fill="#FF0000AA") +
+  geom_line(aes(y=consumo,col= obs_estimadores )) +  theme_bw() + xlab('Data (Mensal)') + 
+  ylab('Consumo')
+  
+  
+
+
+
+```
+
+---
+class: middle
+#Gráfico de Séries Temporais - Sazonalidade
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+dat.ts = ts(dat$consumo, start=1984, freq=12)
+
+ggseasonplot(dat.ts, year.labels=TRUE, year.labels.left=TRUE ) + theme_bw()
+  
+```
+
+
+---
+class: middle
+#Gráfico de Séries Temporais - Sazonalidade
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+dat.ts2 = ts(dat$consumo -  ma(dat$consumo, order = 13, centre = FALSE) , start=1984, freq=12)
+
+ggseasonplot(dat.ts2, year.labels=TRUE, year.labels.left=TRUE ) + theme_bw()
+  
+```
+
+---
+class: middle
+#Estimar Sazonalidade
+
+- Nessa parte do exercício, vou utilizar a sazonalidade estocástica, termo usado no livro de Morettin & Toloi (2004).
+
+- Justificativa: "O método de médias móveis é apropriado quando temos uma série temporal cuja componente sazonal varia com o tempo, ou seja, para séries cuja sazonalidade é estocástica. Todavia, este procedimento é aplicado usualmente mesmo para padrão sazonal constante" (Morettin & Toloi, 2004). O que se observa em séries sazonais são as relações:
+
+a. entre observações para meses sucessivos em um ano particular:
+
+b. entre as observações para o mesmo mes em anos sucessivos.
+
+- Como vimos na aula, considerando o modelo de decomposição
+
+$$Z_t = T_t + S_t + a_t,$$
+
+ao estimarmos $T_t$, por meio de $\hat{T}_t$, teremos uma série residual $Y_t = Z_t - \hat{T}_t.$ Esta série fornecerá meios para estimar $S_t$.
+
+---
+class: middle
+#Estimar Sazonalidade
+
+- Primeiro passo, obter as séries residuais
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+dat %>% mutate( mes = month(dat$data),
+                      tend = ma(dat$consumo, order = 15, centre = FALSE),
+                      residuo = consumo - ma(dat$consumo, order = 15, centre = FALSE))
+```
+
+
+
+---
+class: middle
+#Estimar Sazonalidade
+
+- Segundo passo, calcular médias dos meses: janeiros, fevereiros e etc ... $\bar{Y}_{.j} = \frac{1}{n_j} \sum_{i=1}^{n_{ij}} Y_{ij}, \phantom{11} j = 1, \ldots, 12.$
+
+####Média dos meses
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+consumo = dat$consumo
+tend = ma(dat$consumo, order = 13, centre = FALSE)
+residuo = consumo - tend
+media_meses = tapply(residuo, INDEX = month(dat$data), FUN = mean, na.rm = TRUE)
+names(media_meses) = c("jan","fev","mar", "abr","mai","jun","jul","ago","set","out","nov","dez")
+round(media_meses,3)
+
+```
+
+---
+class: middle
+#Estimar Sazonalidade
+
+- Estimar as estimativas das constantes sazonais $\hat{S}_j = \bar{Y}_{.j} - \bar{Y}$.
+
+
+####Média Geral
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+
+media_geral = mean(media_meses, na.rm=TRUE)
+round(media_geral,3)
+
+```
+
+
+####Estimar componentes sazonalidades
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+comp_sazonal = media_meses - media_geral
+names(comp_sazonal) = c("jan","fev","mar", "abr","mai","jun","jul","ago","set","out","nov","dez")
+round(comp_sazonal,3)
+
+```
+
+
+---
+class: middle
+#Série Livre de Sazonalidade
+
+ - Uma vez que conseguimos estimar $\hat{S}_j$, podemos escrever o modelo de decomposição da seguinte maneira:
+ 
+$$Z_t = T_t + S_j + a_t.$$ 
+com $t = 12i + j,$ $i = 0, 1, \ldots, p-1$, $j = 1, \ldots, 12.$
+
+---
+class: middle
+#Série Livre de Sazonalidade
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+dat5 = tibble(data = rep(dat$data,2),
+             consumo = c(dat$consumo,
+                        dat$consumo -  rep(comp_sazonal,12)
+                        ),
+              obs_estimadores = c(rep("consumo",nrow(dat)),
+                                  rep("Livre_Sazonalidade",nrow(dat))
+                        )
+)
+ggplot(dat5, aes(data, consumo)) + 
+  geom_line(aes(y=consumo,col= obs_estimadores )) +  theme_bw() + xlab('Data (Mensal)') + 
+  ylab('Consumo')
+  
+
+```
+
+

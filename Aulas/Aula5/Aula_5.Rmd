@@ -1,0 +1,503 @@
+---
+title: "Aula 5 - Exercícios sobre Tendência e Sazonalidade "
+subtitle: "Material fortemente baseado no livro de Morettin e Toloi (2004)"
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: middle
+#Introdução
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(ggpmisc)
+library(knitr)
+library(kableExtra)
+library(lubridate)
+library(zoo)
+library(httr)
+library(xlsx)
+library(fpp2)
+```
+
+- Nessa aula serão feitos alguns exercícios sobre tendências e sazonalidade.
+
+- Os exercícios foram extraídos do livro Análise de Séries Temporais, Morettin e Toloi (2004).
+
+- Todos os exercícios escolhidos aqui tem caráter práticos.
+
+- As respostas desses exercícios podem ser encontrados nesse [endereço](https://www.ime.usp.br/~pam/respcap3.pdf).
+
+---
+class: middle
+#Exercício 1 (Exercício 7 no livro)
+
+- Considere a Série $A_{10}$ (M-ICV)
+
+b.  estimate $T_t$ no modelo, supondo $T_t = \beta_0 e^{\beta_1 t}$;
+
+d.  obtenha uma estimativa de $T_t$, utilizando médias móveis de três termos:
+
+---
+class: middle
+#Solução do Exercício 1 (Exercício 7 no livro)
+
+
+##Lendo os dados
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+url1 = 'https://www.ime.usp.br/~pam/ICV.xls'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+
+```
+
+##Gráfico da série
+
+```{r, eval= FALSE, warning=FALSE, message=FALSE}
+
+ggplot(dat, aes(x = Mes.ano, y = ICV)) + geom_path() + theme_bw()
+
+```
+
+
+---
+class: middle
+#Solução do Exercício 1 (Exercício 7 no livro)
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+url1 = 'https://www.ime.usp.br/~pam/ICV.xls'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+
+```
+
+```{r, echo =  FALSE, warning=FALSE, message=FALSE}
+
+ggplot(dat, aes(x = Mes.ano, y = ICV)) + geom_path() + theme_bw()
+
+```
+
+---
+class: middle
+#Solução do Exercício 1 - item b (Exercício 7 no livro)
+
+- Estime $T_t$, supondo o seguinte modelo
+
+###Modelo Proposto
+$$T_t = \beta_0 e^{\beta_1 t}$$
+
+
+###Aplicando logaritmo em ambos os lados
+
+\begin{align}
+\log\{T_t\} =& \log\{\beta_0 e^{\beta_1 t}\} \\
+\log\{T_t\} =& \log\{\beta_0\} + \log\{ e^{\beta_1 t}\} \\
+\log\{T_t\} =& \theta_0 + \beta_1 t
+\end{align}
+
+
+---
+class: middle
+###Solução do Exercício 1 - item b (Ajuste do Modelo) (Exercício 7 no livro)
+
+
+```{r, eval = FALSE}
+
+datG = dat %>% mutate(tempo = 1:nrow(dat), lnICV = log(ICV))
+
+mod = lm(lnICV ~ tempo, data = datG)
+
+summary(mod)
+
+```
+
+
+---
+class: middle
+###Solução do Exercício 1 - item b (Ajuste do Modelo) (Exercício 7 no livro)
+
+```{r, echo = FALSE}
+
+datG = dat %>% mutate(tempo = 1:nrow(dat), lnICV = log(ICV))
+
+mod = lm(lnICV ~ tempo, data = datG)
+
+summary(mod)
+
+
+```
+
+---
+class: middle
+###Solução do Exercício 1 - item b Gráfico dos valores ajustados (Exercício 7 no livro)
+
+```{r, eval = FALSE}
+
+datG = datG %>% mutate(preditos = exp(coef(mod)[1])*exp(coef(mod)[2]*tempo))
+
+ggplot(datG) + geom_point(aes(x = Mes.ano, y = ICV)) +
+  geom_path(aes(x = Mes.ano, y = preditos), col="red") + theme_bw()
+    
+
+```
+
+
+---
+class: middle
+###Solução do Exercício 1 - item b Gráfico dos valores ajustados (Exercício 7 no livro)
+
+```{r, echo = FALSE}
+
+datG = datG %>% mutate(preditos = exp(coef(mod)[1])*exp(coef(mod)[2]*tempo))
+
+ggplot(datG) + geom_point(aes(x = Mes.ano, y = ICV)) +
+  geom_path(aes(x = Mes.ano, y = preditos), col="red") + theme_bw()
+    
+
+```
+
+---
+class: middle
+###Solução do Exercício 1 - item b Conferir as respostas (Exercício 7 no livro)
+
+- Para ficar igual da [página](https://www.ime.usp.br/~pam/respcap3.pdf), deve-se fazer $\hat{\beta}_0 = e^{\hat{\theta_0}}$ que é igual à `r exp(coef(mod)[1])`.
+
+---
+class: middle
+###Solução do Exercício 1 - item d (Exercício 7 no livro)
+
+
+```{r, eval = FALSE}
+#Média Movel
+datG = datG %>% mutate(mm3 = ma(ICV, order = 3, centre=FALSE))
+
+head(datG %>% select(Mes.ano, mm3, ICV))
+
+
+```
+
+
+---
+class: middle
+###Solução do Exercício 1 - item d (Exercício 7 no livro)
+
+
+```{r, echo = FALSE}
+#Média Movel
+datG = datG %>% mutate(mm3 = ma(ICV, order = 3, centre=FALSE))
+
+head(datG %>% select(Mes.ano, mm3, ICV))
+
+```
+
+---
+class: middle
+###Solução do Exercício 1 - item d (Exercício 7 no livro)
+
+
+```{r, eval = FALSE}
+#Plotar a série com a suavização
+ggplot(datG, aes(tempo, ICV)) + 
+  geom_point(position=position_jitter(1,3), pch=21, fill="#FF0000AA") +
+  geom_line(aes(y=mm3)) +
+  theme_bw()
+
+```
+
+---
+class: middle
+###Solução do Exercício 1 - item d (Exercício 7 no livro)
+
+
+```{r, echo = FALSE}
+#Plotar a série com a suavização
+ggplot(datG, aes(tempo, ICV)) + 
+  geom_point(position=position_jitter(1,3), pch=21, fill="#FF0000AA") +
+  geom_line(aes(y=mm3)) +
+  theme_bw()
+
+```
+
+
+---
+class: middle
+#Exercício 2 (Exercício 12 no livro)
+
+
+- Utilize o método "lowess", com $p = 0.3$ e $p = 0.6$, para estimar a tendência das séries $A_7$ - Temperatura na cidade de São Paulo.
+
+
+
+---
+class: middle
+#Solução do Exercício 2 (Exercício 12 no livro)
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+url1 = 'https://www.ime.usp.br/~pam/atmosfera.xls'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+
+```
+
+```{r, echo =  FALSE, warning=FALSE, message=FALSE}
+
+ggplot(dat, aes(x = DATA, y = temperatura)) + geom_path() + theme_bw()
+
+```
+
+
+
+---
+class: middle
+#Solução do Exercício 2 (Exercício 12 no livro)
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+url1 = 'https://www.ime.usp.br/~pam/atmosfera.xls'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+
+```
+
+```{r, echo =  FALSE, warning=FALSE, message=FALSE}
+
+ggplot(dat, aes(x = DATA, y = temperatura)) + geom_path() + theme_bw()
+
+```
+
+
+---
+class: middle
+###Solução do Exercício 2 - item c (p = 0.3) (Exercício 12 no livro)
+
+
+```{r, eval = FALSE}
+#Regressão Lowess 
+datG = dat %>% mutate(tempo = 1:nrow(dat)) 
+  
+datG  = datG %>% mutate(preditos = lowess(tempo, temperatura, f = 0.3)$y)
+
+head(datG %>% select(DATA, temperatura, preditos))
+
+```
+
+
+---
+class: middle
+###Solução do Exercício 2 - item c (Exercício 12 no livro)
+
+
+```{r, echo = FALSE}
+#Regressão Lowess 
+datG = dat %>% mutate(tempo = 1:nrow(dat)) 
+  
+datG  = datG %>% mutate(preditos = lowess(tempo, temperatura, f = 0.3)$y)
+
+head(datG %>% select(DATA, temperatura, preditos))
+
+```
+
+
+---
+class: middle
+###Solução do Exercício 2 - item c (p=0.3) (Exercício 12 no livro)
+
+
+```{r, eval = FALSE}
+#Plotar a série com a suavização
+ggplot(datG, aes(tempo, temperatura)) + 
+  geom_path(col="black")+
+  geom_smooth(method="loess", se=FALSE, span=0.3, col="blue")+
+  theme_bw()
+
+```
+
+---
+class: middle
+###Solução do Exercício 2 - item c (p=0.3) (Exercício 12 no livro)
+
+
+```{r, echo = FALSE}
+#Plotar a série com a suavização
+ggplot(datG, aes(tempo, temperatura)) + 
+  geom_path(col="black")+
+  geom_smooth(method="loess", se=FALSE, span=0.3, col="blue")+
+  theme_bw()
+
+```
+
+---
+class: middle
+###Solução do Exercício 2 - item c (p=0.6) (Exercício 12 no livro)
+
+
+```{r, eval = FALSE}
+#Plotar a série com a suavização
+ggplot(datG, aes(tempo, temperatura)) + 
+  geom_path(col="black")+
+  geom_smooth(method="loess", se=FALSE, span=0.6, col="blue")+
+  theme_bw()
+
+```
+
+---
+class: middle
+###Solução do Exercício 2 - item c (p=0.6) (Exercício 12 no livro)
+
+
+```{r, echo = FALSE, warning = FALSE}
+#Plotar a série com a suavização
+ggplot(datG, aes(tempo, temperatura)) + 
+  geom_path(col="black")+
+  geom_smooth(method="loess", se=FALSE, span=0.92, col="blue")+
+  theme_bw()
+
+```
+
+---
+class: middle
+#Exercício 3 (Exercício 18 no livro)
+
+
+a.  Estime a tendência por meio de uma média móvel centrada de quatro termos;
+
+b.  Obtenha a série livre de tendência e faça seu gráfico;
+
+c.  Obtenha estimativas das constantes sazonais
+
+
+
+**Vamos usar aqui sazonalidade estocástica !!!**
+
+
+---
+class: middle
+#Solução do Exercício 3 (Exercício 18 no livro)
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+dat = 
+  tibble(
+    tempo = 1:16,
+    ano = rep(1962:1965, each=4),
+    trimestre = factor(rep(1:4,4)),
+    resp = c(3,2,4,6,
+             3,5,4,7,
+             6,3,5,8,
+             4,9,10,8)
+  )
+```
+
+```{r, echo =  FALSE, warning=FALSE, message=FALSE}
+
+ggplot(dat, aes(x = tempo, y = resp)) + geom_path() + theme_bw()
+
+```
+
+---
+class: middle
+###Solução do Exercício 3 - item a (Exercício 18 no livro)
+
+
+```{r, eval = FALSE}
+#Média Movel
+datG = dat %>% mutate(mm4 = ma(resp, order =  4, centre=TRUE))
+
+head(datG %>% select(tempo, ano, trimestre, mm4, resp))
+
+```
+
+---
+class: middle
+###Solução do Exercício 3 - item a (Exercício 18 no livro)
+
+
+```{r, echo = FALSE}
+#Média Movel
+datG = dat %>% mutate(mm4 = ma(resp, order =  4, centre=TRUE))
+
+head(datG %>% select(tempo, ano, trimestre, mm4, resp))
+
+
+```
+
+
+---
+class: middle
+###Solução do Exercício 3 - item a (Exercício 18 no livro)
+
+
+```{r, eval = FALSE}
+#Série livre de tendência
+datG = datG %>% mutate(respST = resp - mm4)
+
+head(datG %>% select(tempo, ano, trimestre, mm4, resp, respST ))
+
+```
+
+---
+class: middle
+###Solução do Exercício 3 - item a (Exercício 18 no livro)
+
+
+```{r, echo = FALSE}
+#Série livre de tendência
+datG = datG %>% mutate(respST = resp - mm4)
+
+head(datG %>% select(tempo, ano, trimestre, mm4, resp, respST ))
+
+```
+
+
+---
+class: middle
+###Solução do Exercício 3 - item a (Exercício 18 no livro)
+
+
+```{r, echo = FALSE}
+#Plotar a série com a suavização
+ggplot(datG, aes(tempo, resp)) + 
+  geom_point(position=position_jitter(1,3), pch=21, fill="#FF0000AA") +
+  geom_line(aes(y=respST),col="blue") +
+  geom_line(aes(y=resp), col="black") +
+  theme_bw()
+
+```
+
+
+---
+class: middle
+###Solução do Exercício 3 - item b (Exercício 18 no livro)
+
+
+```{r, echo = FALSE}
+#Série livre de tendência
+datS = datG %>% group_by(trimestre) %>% summarize(
+  media_sazonal = mean(respST, na.rm=TRUE) 
+)
+
+datS = datS %>% mutate(componente_sazonal = 
+                   media_sazonal - mean(media_sazonal, na.rm=TRUE)) 
+
+head(datS)
+
+```
+
+
+---
+class: middle
+###Solução do Exercício 3 - Conferir as respostas (Exercício 18 no livro)
+
+- [respostas:](https://www.ime.usp.br/~pam/respcap3.pdf)

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aula 5 - Exercícios sobre Tendência e Sazonalidade</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Aula 5 - Exercícios sobre Tendência e Sazonalidade
+## Material fortemente baseado no livro de Morettin e Toloi (2004)
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-07-14)
+
+---
+
+class: middle
+#Introdução
+
+
+
+- Nessa aula serão feitos alguns exercícios sobre tendências e sazonalidade.
+
+- Os exercícios foram extraídos do livro Análise de Séries Temporais, Morettin e Toloi (2004).
+
+- Todos os exercícios escolhidos aqui tem caráter práticos.
+
+- As respostas desses exercícios podem ser encontrados nesse [endereço](https://www.ime.usp.br/~pam/respcap3.pdf).
+
+---
+class: middle
+#Exercício 1 (Exercício 7 no livro)
+
+- Considere a Série `\(A_{10}\)` (M-ICV)
+
+b.  estimate `\(T_t\)` no modelo, supondo `\(T_t = \beta_0 e^{\beta_1 t}\)`;
+
+d.  obtenha uma estimativa de `\(T_t\)`, utilizando médias móveis de três termos:
+
+---
+class: middle
+#Solução do Exercício 1 (Exercício 7 no livro)
+
+
+##Lendo os dados
+
+
+```r
+url1 = 'https://www.ime.usp.br/~pam/ICV.xls'
+a = GET(url1, write_disk(tf &lt;- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+```
+
+##Gráfico da série
+
+
+```r
+ggplot(dat, aes(x = Mes.ano, y = ICV)) + geom_path() + theme_bw()
+```
+
+
+---
+class: middle
+#Solução do Exercício 1 (Exercício 7 no livro)
+
+
+
+![](Aula_5_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+#Solução do Exercício 1 - item b (Exercício 7 no livro)
+
+- Estime `\(T_t\)`, supondo o seguinte modelo
+
+###Modelo Proposto
+`$$T_t = \beta_0 e^{\beta_1 t}$$`
+
+
+###Aplicando logaritmo em ambos os lados
+
+`\begin{align}
+\log\{T_t\} =&amp; \log\{\beta_0 e^{\beta_1 t}\} \\
+\log\{T_t\} =&amp; \log\{\beta_0\} + \log\{ e^{\beta_1 t}\} \\
+\log\{T_t\} =&amp; \theta_0 + \beta_1 t
+\end{align}`
+
+
+---
+class: middle
+###Solução do Exercício 1 - item b (Ajuste do Modelo) (Exercício 7 no livro)
+
+
+
+```r
+datG = dat %&gt;% mutate(tempo = 1:nrow(dat), lnICV = log(ICV))
+
+mod = lm(lnICV ~ tempo, data = datG)
+
+summary(mod)
+```
+
+
+---
+class: middle
+###Solução do Exercício 1 - item b (Ajuste do Modelo) (Exercício 7 no livro)
+
+
+```
+## 
+## Call:
+## lm(formula = lnICV ~ tempo, data = datG)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.19337 -0.13148 -0.03261  0.11005  0.40729 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 4.005599   0.026196  152.91   &lt;2e-16 ***
+## tempo       0.022322   0.000358   62.36   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.1461 on 124 degrees of freedom
+## Multiple R-squared:  0.9691,	Adjusted R-squared:  0.9688 
+## F-statistic:  3889 on 1 and 124 DF,  p-value: &lt; 2.2e-16
+```
+
+---
+class: middle
+###Solução do Exercício 1 - item b Gráfico dos valores ajustados (Exercício 7 no livro)
+
+
+```r
+datG = datG %&gt;% mutate(preditos = exp(coef(mod)[1])*exp(coef(mod)[2]*tempo))
+
+ggplot(datG) + geom_point(aes(x = Mes.ano, y = ICV)) +
+  geom_path(aes(x = Mes.ano, y = preditos), col="red") + theme_bw()
+```
+
+
+---
+class: middle
+###Solução do Exercício 1 - item b Gráfico dos valores ajustados (Exercício 7 no livro)
+
+![](Aula_5_files/figure-html/unnamed-chunk-9-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+###Solução do Exercício 1 - item b Conferir as respostas (Exercício 7 no livro)
+
+- Para ficar igual da [página](https://www.ime.usp.br/~pam/respcap3.pdf), deve-se fazer `\(\hat{\beta}_0 = e^{\hat{\theta_0}}\)` que é igual à 54.9046999.
+
+---
+class: middle
+###Solução do Exercício 1 - item d (Exercício 7 no livro)
+
+
+
+```r
+#Média Movel
+datG = datG %&gt;% mutate(mm3 = ma(ICV, order = 3, centre=FALSE))
+
+head(datG %&gt;% select(Mes.ano, mm3, ICV))
+```
+
+
+---
+class: middle
+###Solução do Exercício 1 - item d (Exercício 7 no livro)
+
+
+
+```
+## # A tibble: 6 x 3
+##   Mes.ano    mm3        ICV
+##   &lt;date&gt;     &lt;ts&gt;     &lt;dbl&gt;
+## 1 1970-01-01       NA  71.6
+## 2 1970-02-01 72.53333  72.5
+## 3 1970-03-01 73.50000  73.5
+## 4 1970-04-01 74.40000  74.5
+## 5 1970-05-01 75.33333  75.2
+## 6 1970-06-01 76.13333  76.3
+```
+
+---
+class: middle
+###Solução do Exercício 1 - item d (Exercício 7 no livro)
+
+
+
+```r
+#Plotar a série com a suavização
+ggplot(datG, aes(tempo, ICV)) + 
+  geom_point(position=position_jitter(1,3), pch=21, fill="#FF0000AA") +
+  geom_line(aes(y=mm3)) +
+  theme_bw()
+```
+
+---
+class: middle
+###Solução do Exercício 1 - item d (Exercício 7 no livro)
+
+
+
+```
+## Warning: Removed 2 row(s) containing missing values (geom_path).
+```
+
+![](Aula_5_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+#Exercício 2 (Exercício 12 no livro)
+
+
+- Utilize o método "lowess", com `\(p = 0.3\)` e `\(p = 0.6\)`, para estimar a tendência das séries `\(A_7\)` - Temperatura na cidade de São Paulo.
+
+
+
+---
+class: middle
+#Solução do Exercício 2 (Exercício 12 no livro)
+
+
+
+![](Aula_5_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+
+
+
+---
+class: middle
+#Solução do Exercício 2 (Exercício 12 no livro)
+
+
+
+![](Aula_5_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Solução do Exercício 2 - item c (p = 0.3) (Exercício 12 no livro)
+
+
+
+```r
+#Regressão Lowess 
+datG = dat %&gt;% mutate(tempo = 1:nrow(dat)) 
+  
+datG  = datG %&gt;% mutate(preditos = lowess(tempo, temperatura, f = 0.3)$y)
+
+head(datG %&gt;% select(DATA, temperatura, preditos))
+```
+
+
+---
+class: middle
+###Solução do Exercício 2 - item c (Exercício 12 no livro)
+
+
+
+```
+## # A tibble: 6 x 3
+##   DATA       temperatura preditos
+##   &lt;date&gt;           &lt;dbl&gt;    &lt;dbl&gt;
+## 1 1997-01-01        18.4     19.1
+## 2 1997-01-02        17.4     19.1
+## 3 1997-01-03        17.1     19.1
+## 4 1997-01-04        16.6     19.1
+## 5 1997-01-05        15.8     19.1
+## 6 1997-01-06        18.5     19.0
+```
+
+
+---
+class: middle
+###Solução do Exercício 2 - item c (p=0.3) (Exercício 12 no livro)
+
+
+
+```r
+#Plotar a série com a suavização
+ggplot(datG, aes(tempo, temperatura)) + 
+  geom_path(col="black")+
+  geom_smooth(method="loess", se=FALSE, span=0.3, col="blue")+
+  theme_bw()
+```
+
+---
+class: middle
+###Solução do Exercício 2 - item c (p=0.3) (Exercício 12 no livro)
+
+
+
+```
+## `geom_smooth()` using formula 'y ~ x'
+```
+
+![](Aula_5_files/figure-html/unnamed-chunk-21-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+###Solução do Exercício 2 - item c (p=0.6) (Exercício 12 no livro)
+
+
+
+```r
+#Plotar a série com a suavização
+ggplot(datG, aes(tempo, temperatura)) + 
+  geom_path(col="black")+
+  geom_smooth(method="loess", se=FALSE, span=0.6, col="blue")+
+  theme_bw()
+```
+
+---
+class: middle
+###Solução do Exercício 2 - item c (p=0.6) (Exercício 12 no livro)
+
+
+
+```
+## `geom_smooth()` using formula 'y ~ x'
+```
+
+![](Aula_5_files/figure-html/unnamed-chunk-23-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+#Exercício 3 (Exercício 18 no livro)
+
+
+a.  Estime a tendência por meio de uma média móvel centrada de quatro termos;
+
+b.  Obtenha a série livre de tendência e faça seu gráfico;
+
+c.  Obtenha estimativas das constantes sazonais
+
+
+
+**Vamos usar aqui sazonalidade estocástica !!!**
+
+
+---
+class: middle
+#Solução do Exercício 3 (Exercício 18 no livro)
+
+
+
+![](Aula_5_files/figure-html/unnamed-chunk-25-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+###Solução do Exercício 3 - item a (Exercício 18 no livro)
+
+
+
+```r
+#Média Movel
+datG = dat %&gt;% mutate(mm4 = ma(resp, order =  4, centre=TRUE))
+
+head(datG %&gt;% select(tempo, ano, trimestre, mm4, resp))
+```
+
+---
+class: middle
+###Solução do Exercício 3 - item a (Exercício 18 no livro)
+
+
+
+```
+## # A tibble: 6 x 5
+##   tempo   ano trimestre mm4    resp
+##   &lt;int&gt; &lt;int&gt; &lt;fct&gt;     &lt;ts&gt;  &lt;dbl&gt;
+## 1     1  1962 1            NA     3
+## 2     2  1962 2            NA     2
+## 3     3  1962 3         3.750     4
+## 4     4  1962 4         4.125     6
+## 5     5  1963 1         4.500     3
+## 6     6  1963 2         4.625     5
+```
+
+
+---
+class: middle
+###Solução do Exercício 3 - item a (Exercício 18 no livro)
+
+
+
+```r
+#Série livre de tendência
+datG = datG %&gt;% mutate(respST = resp - mm4)
+
+head(datG %&gt;% select(tempo, ano, trimestre, mm4, resp, respST ))
+```
+
+---
+class: middle
+###Solução do Exercício 3 - item a (Exercício 18 no livro)
+
+
+
+```
+## # A tibble: 6 x 6
+##   tempo   ano trimestre mm4    resp respST
+##   &lt;int&gt; &lt;int&gt; &lt;fct&gt;     &lt;ts&gt;  &lt;dbl&gt; &lt;ts&gt;  
+## 1     1  1962 1            NA     3     NA
+## 2     2  1962 2            NA     2     NA
+## 3     3  1962 3         3.750     4  0.250
+## 4     4  1962 4         4.125     6  1.875
+## 5     5  1963 1         4.500     3 -1.500
+## 6     6  1963 2         4.625     5  0.375
+```
+
+
+---
+class: middle
+###Solução do Exercício 3 - item a (Exercício 18 no livro)
+
+
+
+```
+## Warning: Removed 4 row(s) containing missing values (geom_path).
+```
+
+![](Aula_5_files/figure-html/unnamed-chunk-30-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Solução do Exercício 3 - item b (Exercício 18 no livro)
+
+
+
+```
+## `summarise()` ungrouping output (override with `.groups` argument)
+```
+
+```
+## # A tibble: 4 x 3
+##   trimestre media_sazonal componente_sazonal
+##   &lt;fct&gt;             &lt;dbl&gt;              &lt;dbl&gt;
+## 1 1                -1.25              -1.27 
+## 2 2                -0.25              -0.271
+## 3 3                -0.375             -0.396
+## 4 4                 1.96               1.94
+```
+
+
+---
+class: middle
+###Solução do Exercício 3 - Conferir as respostas (Exercício 18 no livro)
+
+- [respostas:](https://www.ime.usp.br/~pam/respcap3.pdf)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

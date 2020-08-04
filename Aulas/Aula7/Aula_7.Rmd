@@ -1,0 +1,648 @@
+---
+title: "Aula 7 - Exercícios práticos sobre Métodos de Suavização e Decomposição STL"
+subtitle: ""
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: middle
+#Introdução
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(ggpmisc)
+library(knitr)
+library(kableExtra)
+library(lubridate)
+library(zoo)
+library(httr)
+library(xlsx)
+library(fpp2)
+library(TTR)
+library(forecast)
+library(stlplus)
+```
+
+- Nessa aula serão feitas algumas análises estatísticas com algumas séries temporais. 
+
+- A ideia é revisar o que foi visto até agora e dar um exemplo como o trabalho poderá ser feito.
+
+
+---
+class: middle
+#Conjunto de dados 1 
+
+ -  A primeira série temporal a ser analisada é a série $A_5$ (Energia).
+ 
+ - Valores mensais do consumo de energia elétrica no estado do Espírito Santo, de janeiro de 1968 a setembro de 1979.
+ 
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+url1 = 'https://www.ime.usp.br/~pam/ENERGIA.XLS'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+
+```
+
+---
+class: middle
+###Conjunto de dados 1 - Gráfico da série
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+autoplot(ts(dat$Energia, c(1968,1),frequency=12))+theme_bw()+ylab('Consumo Mensal de Energia')+xlab('Meses')
+```
+
+
+---
+class: middle
+##Conjunto de dados 1 - Gráfico da série
+
+- Por meio de inspeção visual, observamos uma tendência de crescimento na série. 
+
+- Observamos um ponto atípico em março de 1979.
+
+- Por enquanto não temos qualquer indício de presença de sazonalidade na série.
+
+---
+class: middle
+###Conjunto de dados 1 - Gráfico de sub séries por ano
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+ggseasonplot(ts(dat$Energia, c(1968,1),frequency=12), year.labels=TRUE, year.labels.left=TRUE ) + theme_bw() +xlab('Meses')+ylab('Consumo Mensal de Energia Elétrica')+ggtitle('')
+```
+
+---
+class: middle
+##Conjunto de dados 1 - Gráfico da série
+
+- A inspeção visual corrobora com a hipótese de ausência de sazonalidade, pois não observamos um padrão periódico dos meses ao longo dos anos
+
+- Observamos um ponto atípico em março de 1979.
+
+- O próximo adotado por mim será fazer a decomposição STL.
+
+
+---
+class: middle
+##Conjunto de dados 1 - Decomposição STL
+
+####Vantagens
+
+- É um método prático sob o ponto de vista computacional.
+
+- Esse método lida com qualquer tipo de sazonalidade, não apenas com dados mensais e trimestrais.
+
+- Pode ser robusto a presença de dados atípicos.
+
+####Desvantagens
+
+- Há vários parâmetros que devem ser definidos pelo usuário.
+
+- Aqui, serão usados alguns procedimentos que estão descritos na seção 3 do artigo [original](https://www.wessa.net/download/stl.pdf).
+
+
+---
+class: middle
+##Conjunto de dados 1 - Principais dos Parâmetros da Decomposição STL
+
+- `t.window` o parâmetro de suavização para o componente de tendência, ou seja, é o número de observações consecutivas a serem usadas na estimativa do ciclo de tendência. (Deve ser um valor ímpar)
+
+ 
+- `s.window`  o parâmetro de suavização para o componente sazonal, ou seja, é o número de anos consecutivos a serem usados na estimativa de cada valor no componente sazonal. (Deve ser um valor ímpar)
+
+####Detalhes importante da opção `s.window`
+
+- O componente sazonal é encontrado suavizando as sub-séries sazonais (a série de todos os valores de janeiro, ...);
+
+- No software R, se `s.window = "periodic"`, a suavização "periódica" é efetivamente substituída pela média.
+
+
+---
+class: middle
+##Conjunto de dados 1 - Decomposição STL
+
+- A estratégia adotada para escolher os parâmetros de suavização será o seguinte:
+
+- Vamos escolher o parâmetro `s.window` baseado em um gráfico diagnóstico.
+
+- Para escolher `t.window` vamos usar a seguinte fórmula $\frac{1.5 n_{(p)}}{1 - 1.5n_{(s)}^{-1}}.$ A explicação dessa fórmula está no artigo, mas foge do escopo da disciplina.
+
+
+####Obs:
+
+- Se o componente sazonal não parecer ser significativo, vou escolher `t.window` apenas através da inspeção visual.
+
+
+
+---
+class: middle
+##Conjunto de dados 1 -  Principais dos Parâmetros da Decomposição STL
+
+- `robust` uma variável lógica que indica se o procedimento robusto.
+
+- `inner` o número de interações do loop interno. 
+
+- `outer` o número de interações do loop externo.
+
+---
+class: middle
+##Conjunto de dados 1 - Parâmetros da Decomposição STL
+
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+ts(dat$Energia, c(1968,1),frequency=12) %>%
+stl(t.window=7, s.window="periodic", robust=FALSE, inner = 2) %>%
+  autoplot()
+```
+
+
+
+
+---
+class: middle
+##Conjunto de dados 1 - Parâmetros da Decomposição STL
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+ts(dat$Energia, c(1968,1),frequency=12) %>%
+stl(t.window=7, s.window="periodic", robust=TRUE, inner = 2, outer=10) %>%autoplot()
+
+
+```
+
+---
+class: middle
+##Conjunto de dados 1 - Decomposição STL (Interpretação)
+
+- Analisando a altura das barras cinza do lado direito do gráfico, nota-se que o componente de tendência domina essa série.
+
+- O componente sazonal aprensenta um efeito tão insignificante que poderia ser adicionado aos resíduos.
+
+- Nesse caso, podemos supor uma decomposição
+
+$$Z_t = T_t + a_t.$$
+
+- Dessa forma, vamos fazer uma previsão com o método de suavização de Holt (1957).
+
+- É possível ver no gráfico do componente "remainder" a presença do ponto atípico em março de 1979.
+
+
+---
+class: middle
+##Conjunto de dados 1 - Método de Suavização de Holt (1957)
+
+- No software R, a biblioteca stats que já vem instalada no R,
+tem uma função chamada `HoltWinters`.
+
+- Essa função executa todos os métodos de suavização.
+
+- No R, para fazer o método de suavização de Holt, deve-se atribuir `gamma = FALSE`.
+
+- Segundo o manual do R, a escolha dos parâmetros deve-se a minimização do erro quadrático médio da previsão.
+
+- Para o software R fazer o processo de minimização, apenas defina os parâmetros da seguinte forma `alpha = NULL` e
+`beta = NULL`.
+
+- No entanto, nesse caso, o software  está minimizando o erro quadrático médio da previsão dos dados que já obtidas ("backforecasting").
+
+- Para verificar a eficiência do método de previsão, vamos usar apenas 129 observações da série e tentar prever as próximas 12 observações.
+
+
+---
+class: middle
+##Conjunto de dados 1 - Método de Suavização de Holt (1957)
+
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+Holt = HoltWinters(ts(dat$Energia, c(1968,1),frequency=12)[1:129], beta=NULL, gamma=FALSE, alpha=NULL)
+
+Holt
+
+```
+
+
+#### Equação de previsão
+
+$$\hat{Z}_{t+h} = \bar{Z}_{t} + h\hat{T}_t, \phantom{11} h > 0.$$
+
+---
+class: middle
+##Conjunto de dados 1 - Método de Suavização de Holt (1957)
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+Holt = HoltWinters(ts(dat$Energia, c(1968,1),frequency=12)[1:129], beta=NULL, gamma=FALSE, alpha=NULL)
+
+Holt
+
+```
+
+
+---
+class: middle
+###Conjunto de dados 1 - Método de Suavização de Holt (1957)
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+n = 141 
+
+datResp1 = tibble(data = rep(1:n,3),
+             dados_obs = c(
+               ts(dat$Energia, c(1968,1),frequency=12), 
+               c(NA, NA, fitted(Holt)[,1], rep(NA,12)),
+               c(rep(NA,129),predict(Holt, 12, prediction.interval=TRUE)[,1])),
+              estimadores = c(rep("dados obs",n),
+                        rep("SEH (ajuste)",n),
+                        rep("SEH (previsão)",n)
+                        )
+)
+
+ggplot(datResp1 , aes(data, dados_obs )) + 
+  geom_line(aes(y=dados_obs ,col= estimadores )) +  theme_bw() + xlab('Data (Mensal)') + ylab('Consumo de Energia')
+  
+
+
+```
+
+
+---
+class: middle
+##Conjunto de dados 1 - Método de Suavização de Holt (1957)
+
+- Uma outra possibilidade seria escrever o modelo de suavização de Holt como um modelo de espaço de estados e maximizar a verossimilhança. Acredito que as funções `holt`, `ses` e `hw` do pacote `forecast` fazem isso.
+
+- Poderia ser pensar em fazer algo como validação cruzada, mas
+nesse caso, que há tendência, honestamente, não sei como funcionaria.
+
+- Esquemas de validação cruzada em séries temporais podem ser vistos [aqui](https://robjhyndman.com/hyndsight/tscv/). Esse link também tem uma discussão [interessante](https://cran.r-project.org/web/packages/greybox/vignettes/ro.html#:~:text=Rolling%20origin%20is%20an%20evaluation,of%20how%20the%20models%20perform.). 
+
+---
+class: middle
+#Conjunto de dados 2
+
+ -  A segunda série temporal a ser analisada é a série $A_3$ (Lavras).
+ 
+ - Precipitação atmosférica em Lavras, MG; observações mensais de janeiro de 1996 a dezembro de 1997.
+ 
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+url1 = 'https://www.ime.usp.br/~pam/LAVRAS.XLS'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+
+```
+
+
+---
+class: middle
+###Conjunto de dados 2 - Gráfico da série
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+autoplot(ts(dat$Precipitação, c(1966,1),frequency=12))+theme_bw()+ylab('Precipitação')+xlab('Meses')
+```
+
+
+---
+class: middle
+##Conjunto de dados 2 - Gráfico da série
+
+- Por meio de inspeção visual, observamos sazonalidade na série
+
+- Por enquanto não temos qualquer indício de presença de tendência na série.
+
+- Não há indícios de dados atípicos.
+
+---
+class: middle
+###Conjunto de dados 2 - Gráfico de sub séries por ano
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+ggseasonplot(ts(dat$Precipitação, c(1966,1),frequency=12), year.labels=TRUE, year.labels.left=TRUE ) + theme_bw() +xlab('Meses')+ylab('Precipitação atmosférica')+ggtitle('Precipitação atmosférica em Lavras, MG')
+```
+
+---
+class: middle
+##Conjunto de dados 1 - Gráfico da série
+
+- A inspeção visual corrobora com a hipótese de presença de sazonalidade, pois está bem claro que há uma maior quantidade de precipitação nos meses (novembro a fevereiro) e uma menor quantidade de precipitação nos demais meses.
+
+- O próximo adotado por mim será fazer a decomposição STL.
+
+
+---
+class: middle
+##Conjunto de dados 2 - Parâmetros da Decomposição STL
+
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+nt = function(np,ns){
+  return((1.5 * np)/(1 - 1.5/ns))
+}
+
+Nt = nt(12,35)
+
+ts(dat$Precipitação, c(1966,1),frequency=12) %>%
+stl(t.window=Nt, s.window=35,  inner = 2, robust = FALSE) %>%
+  autoplot()
+```
+
+
+---
+class: middle
+##Conjunto de dados 2 - Parâmetros da Decomposição STL
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+nt = function(np,ns){
+  return((1.5 * np)/(1 - 1.5/ns))
+}
+
+Nt = nt(12,35)
+
+ts(dat$Precipitação, c(1966,1),frequency=12) %>%
+stl(t.window=Nt, s.window=35,  inner = 2,
+    robust = FALSE) %>%
+  autoplot()
+```
+
+
+---
+class: middle
+##Conjunto de dados 2 - Parâmetros da Decomposição STL
+
+
+- Nessa análise, observa-se que o componente de sazonalidade deve ser significativo, assim como o resíduo.
+
+- Logo, precisamos de um refinamento do parâmetro de sazonalidade. 
+
+- Precisamos saber se o fato do resíduo ser o componente com maior importância, é devido ao mecanismo gerador da série ou uma má escolha do parâmetro de suavização da sazonaliade.
+
+
+---
+class: middle
+### Diagnóstico da Decomposição STL - Subseries de ciclo sem tendência (com 35)
+
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+stlLavras = stlplus(ts(dat$Precipitação, c(1966,1),frequency=12),  n.p = 12, t.window=Nt, s.window=35)
+
+
+plot_seasonal(stlLavras, col = c("darkgray", "black"), 
+              lwd = 2, xlab = "Time",
+              ylab = "Centered Seasonal + Remainder")
+
+```
+
+
+---
+class: middle
+### Diagnóstico da Decomposição STL - Subseries de ciclo sem tendência (com 11)
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+Nt = nt(12,11)
+
+stlLavras = stlplus(ts(dat$Precipitação, c(1966,1),frequency=12),  n.p = 12, t.window=Nt, s.window=11)
+
+
+plot_seasonal(stlLavras, col = c("darkgray", "black"), 
+              lwd = 2, xlab = "Time",
+              ylab = "Centered Seasonal + Remainder")
+
+```
+
+---
+class: middle
+### Diagnóstico da Decomposição STL - Subseries de ciclo sem tendência (Interpretação)
+
+
+- Observando os dois gráficos, nota-se que o valor `s.window` igual a 35 produz estimativas melhores do componente sazonal.
+
+- Pois, não vemos nenhuma fonte de variação extra nas subséries.
+
+- Próximo passo, utilizar método de suavização de Holt - Winters apenas com sazonalidade `beta = FALSE`. 
+
+- Vamos usar 372 observações para ajustar o modelo e usar as últimas 12 observações para verificar a previsão.
+
+- Para escolher entre o modelo aditivo e multiplicativo, vamos fazer as duas previsões e verficar o erro quadrático médio.
+
+---
+class: middle
+##Conjunto de dados 2 - Método de Suavização de Holt-Winters  (1957)
+
+####Série Multiplicativa
+
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+HoltWMult = HoltWinters(ts(c(dat$Precipitação+1e-5), c(1966,1),c(1996,12),frequency=12)
+                    beta=FALSE, gamma=NULL, alpha=NULL, seasonal="multiplicative")
+
+HoltWMult
+
+```
+
+
+---
+class: middle
+##Conjunto de dados 2 - Método de Suavização de Holt Winters (1957)
+
+####Série Multiplicativa
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+
+
+HoltWMult = HoltWinters(ts(c(dat$Precipitação+1e-5), c(1966,1),c(1996,12),frequency=12),
+                    beta=FALSE, gamma=NULL, alpha=NULL, seasonal="multiplicative")
+
+HoltWMult
+
+
+```
+
+
+---
+class: middle
+###Conjunto de dados 2 - Método de Suavização de Holt Winters (1957)
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+n = 384
+
+datResp2 = tibble(data = rep(1:n,3),
+             dados_obs = c(
+               ts(dat$Precipitação, c(1966,1),frequency=12), 
+               c(rep(NA,12), fitted(HoltWMult)[,1], rep(NA,12)),
+               c(rep(NA,372),predict(HoltWMult, 12, prediction.interval=TRUE)[,1])),
+              estimadores = c(rep("dados obs",n),
+                        rep("HW (ajuste)",n),
+                        rep("HW (previsão)",n)
+                        )
+)
+
+ggplot(datResp2 , aes(data, dados_obs )) + 
+  geom_line(aes(y=dados_obs ,col= estimadores )) +  theme_bw() + xlab('Data (Mensal)') + ylab('Precipitação Atmosférica') + ggtitle("Série Multiplicativa")
+  
+
+
+```
+
+
+---
+class: middle
+##Conjunto de dados 2 - Método de Suavização de Holt-Winters  (1957)
+
+####Série Aditiva
+
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+HoltWAdd = HoltWinters(ts(c(dat$Precipitação), c(1966,1),c(1996,12),frequency=12)
+                    beta=FALSE, gamma=NULL, alpha=NULL, seasonal="additive")
+
+HoltWAdd
+
+```
+
+
+---
+class: middle
+##Conjunto de dados 2 - Método de Suavização de Holt Winters (1957)
+
+####Série Multiplicativa
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+
+
+HoltWAdd = HoltWinters(ts(c(dat$Precipitação), c(1966,1),c(1996,12),frequency=12),
+                    beta=FALSE, gamma=NULL, alpha=NULL, seasonal="additive")
+
+HoltWAdd
+
+
+```
+
+
+---
+class: middle
+###Conjunto de dados 2 - Método de Suavização de Holt Winters (1957)
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+n = 384
+
+datResp2 = tibble(data = rep(1:n,3),
+             dados_obs = c(
+               ts(dat$Precipitação, c(1966,1),frequency=12), 
+               c(rep(NA,12), fitted(HoltWAdd)[,1], rep(NA,12)),
+               c(rep(NA,372),predict(HoltWAdd, 12, prediction.interval=TRUE)[,1])),
+              estimadores = c(rep("dados obs",n),
+                        rep("HW (ajuste)",n),
+                        rep("HW (previsão)",n)
+                        )
+)
+
+ggplot(datResp2 , aes(data, dados_obs )) + 
+  geom_line(aes(y=dados_obs ,col= estimadores )) +  theme_bw() + xlab('Data (Mensal)') + ylab('Precipitação Atmosférica') + ggtitle("Série Aditiva")
+ 
+ 
+predHoltWMult = predict(HoltWMult, 12, prediction.interval=TRUE)[,1]
+predHoltWAdd = predict(HoltWAdd, 12, prediction.interval=TRUE)[,1]
+dadosReais = dat$Precipitação[c((length(dat$Precipitação)-11):length(dat$Precipitação))]
+
+```
+
+
+---
+class: middle
+###Conjunto de dados 2 - Método de Suavização de Holt Winters (1957)
+
+
+####Comparação de Erro Quadrático Médio da Previsão
+
+- EQM da Série multiplicativa igual a `r mean(c(predHoltWMult-dadosReais)^2)` 
+
+- EQM da Série aditiva igual a `r mean(c(predHoltWAdd-dadosReais)^2)` 
+
+---
+class: middle, inverse, center
+##Trabalho 2
+
+
+---
+class: middle,
+
+##Roteiro
+
+- Todos os grupos **devem** optar por analisar a série M-PFI ou a série Bebidas. 
+
+
+####Opção 1
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+url1 = 'https://www.ime.usp.br/~pam/BEBIDA.XLS'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1, header=FALSE))
+
+```
+
+####Opção 2
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+
+url2 = 'https://www.ime.usp.br/~pam/PFI.XLS'
+a = GET(url2, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1, header=FALSE))
+
+```
+
+
+
+---
+class: middle,
+
+##Roteiro
+
+
+##Tarefas
+ 
+- Faça o gráfico da série (obrigatório)
+
+- Faça o gráfico de sub séries por ano (opcional)
+
+- Escolha um método para estimar tendência e sazonalidade. **Justifique a sua escolha**. Nessa etapa você é livre para escolher inclusive o método STL. (obrigatório)
+
+- Caso você escolher o método STL, descreva como você escolheu os parâmetros.
+
+- Escolha um método para fazer previsão. **Justifique a sua escolha**. Você deve deixar as ultimas 12 observações para verificar a eficiência da previsão. (obrigatório). calcule o EQM de previsão.
+
+

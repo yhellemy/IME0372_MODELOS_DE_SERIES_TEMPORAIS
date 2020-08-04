@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aula 7 - Exercícios práticos sobre Métodos de Suavização e Decomposição STL</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Aula 7 - Exercícios práticos sobre Métodos de Suavização e Decomposição STL
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-07-21)
+
+---
+
+class: middle
+#Introdução
+
+
+
+- Nessa aula serão feitas algumas análises estatísticas com algumas séries temporais. 
+
+- A ideia é revisar o que foi visto até agora e dar um exemplo como o trabalho poderá ser feito.
+
+
+---
+class: middle
+#Conjunto de dados 1 
+
+ -  A primeira série temporal a ser analisada é a série `\(A_5\)` (Energia).
+ 
+ - Valores mensais do consumo de energia elétrica no estado do Espírito Santo, de janeiro de 1968 a setembro de 1979.
+ 
+
+
+
+
+---
+class: middle
+###Conjunto de dados 1 - Gráfico da série
+
+![](Aula_7_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Conjunto de dados 1 - Gráfico da série
+
+- Por meio de inspeção visual, observamos uma tendência de crescimento na série. 
+
+- Observamos um ponto atípico em março de 1979.
+
+- Por enquanto não temos qualquer indício de presença de sazonalidade na série.
+
+---
+class: middle
+###Conjunto de dados 1 - Gráfico de sub séries por ano
+
+![](Aula_7_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Conjunto de dados 1 - Gráfico da série
+
+- A inspeção visual corrobora com a hipótese de ausência de sazonalidade, pois não observamos um padrão periódico dos meses ao longo dos anos
+
+- Observamos um ponto atípico em março de 1979.
+
+- O próximo adotado por mim será fazer a decomposição STL.
+
+
+---
+class: middle
+##Conjunto de dados 1 - Decomposição STL
+
+####Vantagens
+
+- É um método prático sob o ponto de vista computacional.
+
+- Esse método lida com qualquer tipo de sazonalidade, não apenas com dados mensais e trimestrais.
+
+- Pode ser robusto a presença de dados atípicos.
+
+####Desvantagens
+
+- Há vários parâmetros que devem ser definidos pelo usuário.
+
+- Aqui, serão usados alguns procedimentos que estão descritos na seção 3 do artigo [original](https://www.wessa.net/download/stl.pdf).
+
+
+---
+class: middle
+##Conjunto de dados 1 - Principais dos Parâmetros da Decomposição STL
+
+- `t.window` o parâmetro de suavização para o componente de tendência, ou seja, é o número de observações consecutivas a serem usadas na estimativa do ciclo de tendência. (Deve ser um valor ímpar)
+
+ 
+- `s.window`  o parâmetro de suavização para o componente sazonal, ou seja, é o número de anos consecutivos a serem usados na estimativa de cada valor no componente sazonal. (Deve ser um valor ímpar)
+
+####Detalhes importante da opção `s.window`
+
+- O componente sazonal é encontrado suavizando as sub-séries sazonais (a série de todos os valores de janeiro, ...);
+
+- No software R, se `s.window = "periodic"`, a suavização "periódica" é efetivamente substituída pela média.
+
+
+---
+class: middle
+##Conjunto de dados 1 - Decomposição STL
+
+- A estratégia adotada para escolher os parâmetros de suavização será o seguinte:
+
+- Vamos escolher o parâmetro `s.window` baseado em um gráfico diagnóstico.
+
+- Para escolher `t.window` vamos usar a seguinte fórmula `\(\frac{1.5 n_{(p)}}{1 - 1.5n_{(s)}^{-1}}.\)` A explicação dessa fórmula está no artigo, mas foge do escopo da disciplina.
+
+
+####Obs:
+
+- Se o componente sazonal não parecer ser significativo, vou escolher `t.window` apenas através da inspeção visual.
+
+
+
+---
+class: middle
+##Conjunto de dados 1 -  Principais dos Parâmetros da Decomposição STL
+
+- `robust` uma variável lógica que indica se o procedimento robusto.
+
+- `inner` o número de interações do loop interno. 
+
+- `outer` o número de interações do loop externo.
+
+---
+class: middle
+##Conjunto de dados 1 - Parâmetros da Decomposição STL
+
+
+
+```r
+ts(dat$Energia, c(1968,1),frequency=12) %&gt;%
+stl(t.window=7, s.window="periodic", robust=FALSE, inner = 2) %&gt;%
+  autoplot()
+```
+
+
+
+
+---
+class: middle
+##Conjunto de dados 1 - Parâmetros da Decomposição STL
+
+
+![](Aula_7_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Conjunto de dados 1 - Decomposição STL (Interpretação)
+
+- Analisando a altura das barras cinza do lado direito do gráfico, nota-se que o componente de tendência domina essa série.
+
+- O componente sazonal aprensenta um efeito tão insignificante que poderia ser adicionado aos resíduos.
+
+- Nesse caso, podemos supor uma decomposição
+
+`$$Z_t = T_t + a_t.$$`
+
+- Dessa forma, vamos fazer uma previsão com o método de suavização de Holt (1957).
+
+- É possível ver no gráfico do componente "remainder" a presença do ponto atípico em março de 1979.
+
+
+---
+class: middle
+##Conjunto de dados 1 - Método de Suavização de Holt (1957)
+
+- No software R, a biblioteca stats que já vem instalada no R,
+tem uma função chamada `HoltWinters`.
+
+- Essa função executa todos os métodos de suavização.
+
+- No R, para fazer o método de suavização de Holt, deve-se atribuir `gamma = FALSE`.
+
+- Segundo o manual do R, a escolha dos parâmetros deve-se a minimização do erro quadrático médio da previsão.
+
+- Para o software R fazer o processo de minimização, apenas defina os parâmetros da seguinte forma `alpha = NULL` e
+`beta = NULL`.
+
+- No entanto, nesse caso, o software  está minimizando o erro quadrático médio da previsão dos dados que já obtidas ("backforecasting").
+
+- Para verificar a eficiência do método de previsão, vamos usar apenas 129 observações da série e tentar prever as próximas 12 observações.
+
+
+---
+class: middle
+##Conjunto de dados 1 - Método de Suavização de Holt (1957)
+
+
+
+```r
+Holt = HoltWinters(ts(dat$Energia, c(1968,1),frequency=12)[1:129], beta=NULL, gamma=FALSE, alpha=NULL)
+
+Holt
+```
+
+
+#### Equação de previsão
+
+`$$\hat{Z}_{t+h} = \bar{Z}_{t} + h\hat{T}_t, \phantom{11} h &gt; 0.$$`
+
+---
+class: middle
+##Conjunto de dados 1 - Método de Suavização de Holt (1957)
+
+
+
+```
+## Holt-Winters exponential smoothing with trend and without seasonal component.
+## 
+## Call:
+## HoltWinters(x = ts(dat$Energia, c(1968, 1), frequency = 12)[1:129],     alpha = NULL, beta = NULL, gamma = FALSE)
+## 
+## Smoothing parameters:
+##  alpha: 0.5674468
+##  beta : 0.1735579
+##  gamma: FALSE
+## 
+## Coefficients:
+##        [,1]
+## a 165012.22
+## b   6312.24
+```
+
+
+---
+class: middle
+###Conjunto de dados 1 - Método de Suavização de Holt (1957)
+
+![](Aula_7_files/figure-html/unnamed-chunk-9-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Conjunto de dados 1 - Método de Suavização de Holt (1957)
+
+- Uma outra possibilidade seria escrever o modelo de suavização de Holt como um modelo de espaço de estados e maximizar a verossimilhança. Acredito que as funções `holt`, `ses` e `hw` do pacote `forecast` fazem isso.
+
+- Poderia ser pensar em fazer algo como validação cruzada, mas
+nesse caso, que há tendência, honestamente, não sei como funcionaria.
+
+- Esquemas de validação cruzada em séries temporais podem ser vistos [aqui](https://robjhyndman.com/hyndsight/tscv/). Esse link também tem uma discussão [interessante](https://cran.r-project.org/web/packages/greybox/vignettes/ro.html#:~:text=Rolling%20origin%20is%20an%20evaluation,of%20how%20the%20models%20perform.). 
+
+---
+class: middle
+#Conjunto de dados 2
+
+ -  A segunda série temporal a ser analisada é a série `\(A_3\)` (Lavras).
+ 
+ - Precipitação atmosférica em Lavras, MG; observações mensais de janeiro de 1996 a dezembro de 1997.
+ 
+
+
+
+
+
+---
+class: middle
+###Conjunto de dados 2 - Gráfico da série
+
+![](Aula_7_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Conjunto de dados 2 - Gráfico da série
+
+- Por meio de inspeção visual, observamos sazonalidade na série
+
+- Por enquanto não temos qualquer indício de presença de tendência na série.
+
+- Não há indícios de dados atípicos.
+
+---
+class: middle
+###Conjunto de dados 2 - Gráfico de sub séries por ano
+
+![](Aula_7_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Conjunto de dados 1 - Gráfico da série
+
+- A inspeção visual corrobora com a hipótese de presença de sazonalidade, pois está bem claro que há uma maior quantidade de precipitação nos meses (novembro a fevereiro) e uma menor quantidade de precipitação nos demais meses.
+
+- O próximo adotado por mim será fazer a decomposição STL.
+
+
+---
+class: middle
+##Conjunto de dados 2 - Parâmetros da Decomposição STL
+
+
+
+```r
+nt = function(np,ns){
+  return((1.5 * np)/(1 - 1.5/ns))
+}
+
+Nt = nt(12,35)
+
+ts(dat$Precipitação, c(1966,1),frequency=12) %&gt;%
+stl(t.window=Nt, s.window=35,  inner = 2, robust = FALSE) %&gt;%
+  autoplot()
+```
+
+
+---
+class: middle
+##Conjunto de dados 2 - Parâmetros da Decomposição STL
+
+
+![](Aula_7_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Conjunto de dados 2 - Parâmetros da Decomposição STL
+
+
+- Nessa análise, observa-se que o componente de sazonalidade deve ser significativo, assim como o resíduo.
+
+- Logo, precisamos de um refinamento do parâmetro de sazonalidade. 
+
+- Precisamos saber se o fato do resíduo ser o componente com maior importância, é devido ao mecanismo gerador da série ou uma má escolha do parâmetro de suavização da sazonaliade.
+
+
+---
+class: middle
+### Diagnóstico da Decomposição STL - Subseries de ciclo sem tendência (com 35)
+
+
+
+![](Aula_7_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+### Diagnóstico da Decomposição STL - Subseries de ciclo sem tendência (com 11)
+
+
+![](Aula_7_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+### Diagnóstico da Decomposição STL - Subseries de ciclo sem tendência (Interpretação)
+
+
+- Observando os dois gráficos, nota-se que o valor `s.window` igual a 35 produz estimativas melhores do componente sazonal.
+
+- Pois, não vemos nenhuma fonte de variação extra nas subséries.
+
+- Próximo passo, utilizar método de suavização de Holt - Winters apenas com sazonalidade `beta = FALSE`. 
+
+- Vamos usar 372 observações para ajustar o modelo e usar as últimas 12 observações para verificar a previsão.
+
+- Para escolher entre o modelo aditivo e multiplicativo, vamos fazer as duas previsões e verficar o erro quadrático médio.
+
+---
+class: middle
+##Conjunto de dados 2 - Método de Suavização de Holt-Winters  (1957)
+
+####Série Multiplicativa
+
+
+
+```r
+HoltWMult = HoltWinters(ts(c(dat$Precipitação+1e-5), c(1966,1),c(1996,12),frequency=12)
+                    beta=FALSE, gamma=NULL, alpha=NULL, seasonal="multiplicative")
+
+HoltWMult
+```
+
+
+---
+class: middle
+##Conjunto de dados 2 - Método de Suavização de Holt Winters (1957)
+
+####Série Multiplicativa
+
+
+
+```
+## Holt-Winters exponential smoothing without trend and with multiplicative seasonal component.
+## 
+## Call:
+## HoltWinters(x = ts(c(dat$Precipitação + 1e-05), c(1966, 1),     c(1996, 12), frequency = 12), alpha = NULL, beta = FALSE,     gamma = NULL, seasonal = "multiplicative")
+## 
+## Smoothing parameters:
+##  alpha: 0
+##  beta : FALSE
+##  gamma: 0.1375279
+## 
+## Coefficients:
+##             [,1]
+## a   143.50929030
+## s1    2.04698254
+## s2    1.65773485
+## s3    1.22155555
+## s4    0.45759339
+## s5    0.48736785
+## s6    0.13184874
+## s7    0.08826124
+## s8    0.10880840
+## s9    0.54394272
+## s10   0.78832412
+## s11   1.37237392
+## s12   1.98241014
+```
+
+
+---
+class: middle
+###Conjunto de dados 2 - Método de Suavização de Holt Winters (1957)
+
+
+![](Aula_7_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Conjunto de dados 2 - Método de Suavização de Holt-Winters  (1957)
+
+####Série Aditiva
+
+
+
+```r
+HoltWAdd = HoltWinters(ts(c(dat$Precipitação), c(1966,1),c(1996,12),frequency=12)
+                    beta=FALSE, gamma=NULL, alpha=NULL, seasonal="additive")
+
+HoltWAdd
+```
+
+
+---
+class: middle
+##Conjunto de dados 2 - Método de Suavização de Holt Winters (1957)
+
+####Série Multiplicativa
+
+
+
+```
+## Holt-Winters exponential smoothing without trend and with additive seasonal component.
+## 
+## Call:
+## HoltWinters(x = ts(c(dat$Precipitação), c(1966, 1), c(1996,     12), frequency = 12), alpha = NULL, beta = FALSE, gamma = NULL,     seasonal = "additive")
+## 
+## Smoothing parameters:
+##  alpha: 0
+##  beta : FALSE
+##  gamma: 0.1240508
+## 
+## Coefficients:
+##           [,1]
+## a    143.50928
+## s1   150.27229
+## s2    91.36211
+## s3    31.60988
+## s4   -77.29155
+## s5   -75.38538
+## s6  -123.60240
+## s7  -130.09054
+## s8  -127.40186
+## s9   -65.59763
+## s10  -29.48624
+## s11   53.34457
+## s12  141.59941
+```
+
+
+---
+class: middle
+###Conjunto de dados 2 - Método de Suavização de Holt Winters (1957)
+
+
+![](Aula_7_files/figure-html/unnamed-chunk-22-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Conjunto de dados 2 - Método de Suavização de Holt Winters (1957)
+
+
+####Comparação de Erro Quadrático Médio da Previsão
+
+- EQM da Série multiplicativa igual a 3066.9787646 
+
+- EQM da Série aditiva igual a 2986.0276733 
+
+---
+class: middle, inverse, center
+##Trabalho 2
+
+
+---
+class: middle,
+
+##Roteiro
+
+- Todos os grupos **devem** optar por analisar a série M-PFI ou a série Bebidas. 
+
+
+####Opção 1
+
+
+```r
+url1 = 'https://www.ime.usp.br/~pam/BEBIDA.XLS'
+a = GET(url1, write_disk(tf &lt;- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1, header=FALSE))
+```
+
+####Opção 2
+
+
+```r
+url2 = 'https://www.ime.usp.br/~pam/PFI.XLS'
+a = GET(url2, write_disk(tf &lt;- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1, header=FALSE))
+```
+
+
+
+---
+class: middle,
+
+##Roteiro
+
+
+##Tarefas
+ 
+- Faça o gráfico da série (obrigatório)
+
+- Faça o gráfico de sub séries por ano (opcional)
+
+- Escolha um método para estimar tendência e sazonalidade. **Justifique a sua escolha**. Nessa etapa você é livre para escolher inclusive o método STL. (obrigatório)
+
+- Caso você escolher o método STL, descreva como você escolheu os parâmetros.
+
+- Escolha um método para fazer previsão. **Justifique a sua escolha**. Você deve deixar as ultimas 12 observações para verificar a eficiência da previsão. (obrigatório). calcule o EQM de previsão.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
