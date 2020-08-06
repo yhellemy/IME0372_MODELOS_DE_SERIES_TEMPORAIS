@@ -1,6 +1,6 @@
 ---
 title: "Aula 16 - Modelos de Espaço de Estados"
-subtitle: "Material fortemente baseado no livro de Morettin e Toloi (2004) e no material didático do curso EE363: Linear Dynamical Systems (Prof.Stephen P. Boyd, Stanford)"
+subtitle: "Material baseado no livro de Morettin e Toloi (2004)"
 author: "Renato Rodrigues Silva"
 institute: "Universidade Federal de Goiás."
 date: "(updated: `r Sys.Date()`)"
@@ -32,9 +32,7 @@ observáveis de tendência, sazonalidade, ciclo e ruído aleatório.
 class: middle
 ##Introdução (Glaura Franco  e Dani Gammerman)
 
-- A principal vantagem dos modelos propostos a partir da década de 80 é que ao invés de ajustar funções que descrevem os componentes não observáveis aos dados históricos,
-
-- Estes procedimentos procuram identificar os componentes básicos na série e o modelo resultante é obtido a partir da composição desses elementos.
+- A principal vantagem dos modelos é que ao invés de ajustar funções que descrevem os componentes não observáveis aos dados históricos, estes procedimentos procuram identificar os componentes básicos na série e o modelo resultante é obtido a partir da composição desses elementos.
 
 - Ou seja, este tipo de modelo supõe que os movimentos característicos de uma série temporal $\left\{ Z_t \right\}, t = 1,...n$, podem ser decompostos em componentes não-observáveis, como por exemplo, tendência, sazonalidade, componente cíclica e componente aleatória ou erro. 
 
@@ -147,15 +145,15 @@ class: middle
 - Matematicamente, o modelo de espaço de estados para uma série temporal univariada pode ser representado da seguinte maneira:
 
 \begin{align}
-Z_t   =& \mathbf{A} \mathbf{X}_t + \nu_t \\
-\mathbf{X}_{t+1}  =& \mathbf{G} \mathbf{X}_{t}  + \mathbf{w}_t, \phantom{11} t = 1, \ldots, N.
+Z_t   =& \mathbf{A}_t \mathbf{X}_t + \nu_t \phantom{111} \mbox{(equação de observação)}\\
+\mathbf{X}_{t}  =& \mathbf{G}_t \mathbf{X}_{t-1}  + \mathbf{w}_t, \phantom{11} t = 1, \ldots, N.  \phantom{111} \mbox{(equação de estado)}
 \end{align}
 
-em que $\mathbf{A}$ é a matriz do sistema, de ordem $(q \times p)$;
+em que $\mathbf{A}$ é a matriz do sistema (matriz de variáveis explanatórias), de ordem $(q \times p)$;
 
 - $\nu_t$ é o ruído de observação, de ordem $(q \times 1)$, não correlacionado, com média zero e variância $\mathbf{R}$;
 
-- $\mathbf{G}$ é a matriz de transição, de ordem  $(p \times p)$ e 
+- $\mathbf{G}$ é a matriz de transição (matriz de evolução), de ordem  $(p \times p)$ e 
 
 - $\mathbf{w}_t$ é um vetor de ruídos não correlacionados, representando a perturbação do sistema, de ordem $(p \times 1)$, com média zero e matriz de covariâncias $\textbf{Q}$.
 
@@ -169,77 +167,132 @@ class: middle
 
 - O estado inicial $\mathbf{X}_0$ tem média $\boldsymbol{\mu}_0$ e matriz de covariâncias $\boldsymbol{\Sigma}_0$;
 
-- $\nu_t \perp \mathbf{X}_t \phantom{11} \forall \phantom{1} t$, $\mathbf{w}_t \perp \mathbf{X}_0, \ldots, \mathbf{X}_1$ e $\mathbf{w}_t \perp Z_0, \ldots, Z_t.$
+- os vetores de ruídos $\nu_t$ e $\mathbf{w}_t$ são não correlacionados entre si e não correlacionados com o estado inicial, isto é,
+
+- $E[\nu_t\mathbf{w}_s^{'}] = 0, \phantom{11} \forall t, s = 1, \ldots, N.$
+- $E[\nu_t\mathbf{X}_0^{'}] = 0 \phantom{11} \mbox{e} \phantom{11} E[\mathbf{w}_t\mathbf{X}_0^{'}] = 0, \phantom{11} \forall t, s = 1, \ldots, N.$
 
 - Dizemos que o modelo de espaço de estados é gaussiano quando vetores de ruídos forem normalmente distribuídos. 
 
-- Como $\mathbf{X}_t$ e $Z_t$ são combinações lineares de $\nu_t$ e $\mathbf{w}_t$, 
-a distribuição conjunta de $(X_0, w_1, \ldots, w_t, \nu_1, \ldots, \nu_t)$ é Gaussiana. 
+- O vetor $\mathbf{A}$ e a matriz $\mathbf{G}$ são não estocásticas; assim se houver variação no tempo estes serão pré-determinados. Quando forem constantes no tempo será dito *homogêneo no tempo*.
 
-- O vetor $\mathbf{A}$ e a matriz $\mathbf{G}$ são não estocásticas; assim se houver variação no tempo estes serão pré-determinados.
+- O vetor de estados **não é diretamente observado**; o que se observa é uma versão linear dele, adicionada a um ruído. 
 
-- A distribuição $f(\mathbf{X}_t | Z_1, \ldots, Z_s)$ é Gaussiana com média igual a $\mathbf{X}_t^s =  E[\mathbf{X}_t| Z_1, \ldots, Z_s]$ e variância igual a $\mathbf{P}_t^s =  E[(\mathbf{X}_t - \mathbf{X}_t^s)(\mathbf{X}_t - \mathbf{X}_t^s)^{'}| Z_1, \ldots, Z_s].$
 
 
 ---
 class: inverse, middle, center
-##Filtro de Kalman
-
-
+##Inferência Sequencial
 
 ---
 class: middle
-##Filtro de Kalman - Objetivo Geral
+##Inferência Sequencial (Hedibert Freitas Lopes)
 
-- O objetivo é:
+- Um dos aspectos de um modelo dinâmico é que em qualquer tempo $t$, a inferência pode ser baseada na distribuição atualizada $\mathbf{X}_t|\mathbf{Z}_t$.
 
-- Estimar $\mathbf{X}_t^t$, ou seja, o valor médio do estado atual baseado e em observações passadas.
+- Inferência sequencial executa isso ao longo do tempo:
 
-- Predizer $\mathbf{X}_{t+1}^{t}$, ou seja, predizer o valor do estado no instante futuro $t+1$ baseado no estado atual e em observações passadas.
+- Existem 3 operações básicas:
 
-- Desde que $\mathbf{X}_t$, $Z_t$ tem distribuição conjunta Gaussiana, a distribuição condicional de $\mathbf{X}_t$ dado $\mathbf{Z}_t = \left\{Z_1, \ldots, Z_t\right\}$ é Gaussiana com esperança dada por:
+- Evolução;
 
-$$\mathbf{X}_t^t = \boldsymbol{\mu}_{\mathbf{X}_{t}} + \boldsymbol{\Sigma}_{\mathbf{X}_t \mathbf{Z}_t}\boldsymbol{\Sigma}_{\mathbf{Z}_t}^{-1}(\mathbf{Z_t} - \boldsymbol{\mu}_{\mathbf{Z}_t})$$
+- Predição;
 
-- O método do Filtro de Kalman é utilizado para calcular $\mathbf{X}_t^t$ e $\mathbf{X}_{t+1}^t$, recursivamente. 
+- Atualização.
 
 ---
 class: middle
-##Filtro de Kalman - Derivação
+##Evolução (Hedibert Freitas Lopes)
 
-Inicialmente, temos que a Esperança e Variância Marginal de $\mathbf{X}_t$ é dada por:
+- Evolução de $p(\mathbf{X}_{t-1}|\mathbf{Z}^{t-1})$ para $p(\mathbf{X}_t|\mathbf{Z}^{t-1})$.
+
+- Considere no instante $t-1$, a distribuição atualizada de $\mathbf{X}_{t-1}$ condicionada a $\mathbf{Z}^{t-1}$ como sendo
+
+$$\mathbf{X}_{t-1}|\mathbf{Z}^{t-1} \sim N(\mathbf{x}_{t-1}^{t-1}, \mathbf{P}^{t-1}_{t-1}).$$
+
+em que $\mathbf{Z}^{t-1} = \left[Z_1, Z_2, \ldots, Z_{t-1}\right],$ $\mathbf{x}_{t-1}^{t-1} = E[\mathbf{X}_{t-1}|\mathbf{Z}^{t-1}]$ e
+$\mathbf{P}^{t-1}_{t-1} = Var[\mathbf{X}_{t-1}|\mathbf{Z}^{t-1}].$
+
+- Supondo que os ruídos e os estados sejam normalmente distribuídos, a partir da equação do sistema podemos determinar a distribuição $\mathbf{X}_t$ condicionado a $\mathbf{X}_{t-1}$, ou seja,
+
+$$\mathbf{X}_t|\mathbf{X}_{t-1} \sim N(\mathbf{G}_t\mathbf{X}_{t-1}, \mathbf{Q}).$$
+
+---
+class: middle
+##Evolução (Hedibert Freitas Lopes)
+
+- Agora supondo propriedade Markoviana temos:
+
+$$p(\mathbf{X}_{t-1}, \mathbf{X}_{t}|\mathbf{Z}^{t-1}) = p(\mathbf{X}_{t-1}|\mathbf{Z}^{t-1}) p(\mathbf{X}_t|\mathbf{X}_{t-1}).$$
+
+Consequentemente, a distribuição de $\mathbf{X}_{t}$ condicionado a $\mathbf{Z}^{t-1}$ é dada por:
+
+
+$$p(\mathbf{X}_t|\mathbf{Z}^{t-1}) = \int p(\mathbf{X}_{t-1}, \mathbf{X}_{t}|\mathbf{Z}^{t-1}) d \mathbf{X}_{t-1}$$
+em que utilizando propriedades de [esperança condicional](https://en.wikipedia.org/wiki/Conditional_expectation#Basic_properties) e de [variância condicional](https://en.wikipedia.org/wiki/Law_of_total_variance) temos:
 
 \begin{align}
-\boldsymbol{\mu}_{\mathbf{X}_{t+1}} =& E[\mathbf{X}_{t+1}] \\
-=& E[\mathbf{G}\mathbf{X}_{t} + \mathbf{w}_t ] \\
-=& E[\mathbf{G}\mathbf{X}_{t}] + E[\mathbf{w}_t ] \\
-=& \mathbf{G}E[\mathbf{X}_{t}] \\
-=& \mathbf{G}\boldsymbol{\mu}_{\mathbf{X}_{t}}.
+E[\mathbf{X}_t|\mathbf{Z}^{t-1}] =& E[E[\mathbf{X}_t|\mathbf{X}_{t-1}]|\mathbf{Z}^{t-1}] \\
+=& E[\mathbf{G}_t  \mathbf{X}_{t-1} | \mathbf{Z}^{t-1} ] = \mathbf{G}_t 
+E[\mathbf{X}_{t-1} | \mathbf{Z}^{t-1} ] = \mathbf{G}_t \mathbf{x}_{t-1}^{t-1}.
 \end{align}
-e
 
 \begin{align}
-\boldsymbol{\Sigma}_{\mathbf{X}_{t+1}} =& Var[\mathbf{X}_{t+1}] \\
-=& Var[\mathbf{G}\mathbf{X}_{t} + \mathbf{w}_t ] \\
-=& Var[\mathbf{G}\mathbf{X}_{t}] + Var[\mathbf{w}_t ]  \phantom{11} \mbox{desde que}  \phantom{11} \mathbf{w}_t \phantom{11} \mbox{e} \phantom{11} \mathbf{X}_{t} \phantom{11} \mbox{são independentes.} \\
-=& \mathbf{G}Var[\mathbf{X}_{t}]\mathbf{G}^{'} + \mathbf{Q} \\
-=& \mathbf{G}\boldsymbol{\Sigma}_{t}\mathbf{G}^{'} + \mathbf{Q}.
+Var[\mathbf{X}_t|\mathbf{Z}^{t-1}] =& E[Var[\mathbf{X}_t|\mathbf{X}_{t-1}, \mathbf{Z}^{t-1}]|\mathbf{Z}^{t-1}] +
+Var[E[\mathbf{X}_{t} | \mathbf{X}_{t-1},\mathbf{Z}^{t-1} ]|\mathbf{Z}^{t-1}]  \\
+=& E[Var[\mathbf{X}_t|\mathbf{X}_{t-1}]|\mathbf{Z}^{t-1}] +
+Var[E[\mathbf{X}_{t} | \mathbf{X}_{t-1} ]|\mathbf{Z}^{t-1}] \\
+=& \mathbf{Q} + Var[\mathbf{G}_{t}  \mathbf{X}_{t-1} |\mathbf{Z}^{t-1}] \\
+=&  \mathbf{Q} + \mathbf{G}_{t}\mathbf{P}_{t-1}^{t-1} \mathbf{G}_{t}^{'}.
 \end{align}
 
+Logo, $\mathbf{X}_t|\mathbf{Z}^{t-1} \sim N(\mathbf{G}_t \mathbf{x}_{t-1}^{t-1}, \mathbf{Q} + \mathbf{G}_{t}\mathbf{P}_{t-1}^{t-1} \mathbf{G}_{t}^{'} ).$
+
+---
+class: middle
+##Predição (Hedibert Freitas Lopes)
+
+- Uma predição a um passo a frente pode ser feita, notando que
+
+\begin{align}
+p(Z_t, \mathbf{X}_t|\mathbf{Z}^{t-1}) = p(\mathbf{X}_t|\mathbf{Z}^{t-1}) p(Z_t|\mathbf{X}_t) 
+\end{align}
+pois estamos assumindo que $Z_t|\mathbf{X}_t \perp \mathbf{Z}^{t-1}.$
+
+- Assim, a distribuição de $Z_t, \mathbf{X}_t| \mathbf{Z}^{t-1}$ pode ser obtida levando a seguinte distribuição:
+
+$$p(Z_t | \mathbf{Z}^{t-1}) = \int p(Z_t, \mathbf{X}_t| \mathbf{Z}^{t-1}) d\mathbf{X}_t$$
+
+Ou seja, $\mathbf{Z}_t | \mathbf{Z}_{t-1} \sim N(\mathbf{A}_t\mathbf{x}_{t}^{t-1}, \mathbf{A}_t\mathbf{P}_t^{t-1}\mathbf{A}_t^{'}+\mathbf{R}),$ pois a partir da equação de observação
 
 
+\begin{align}
+E[Z_t|\mathbf{Z}^{t-1}] =& E[E[Z_t|\mathbf{X}_{t}]|\mathbf{Z}^{t-1}] \\
+=& E[\mathbf{A}_t  \mathbf{X}_{t} | \mathbf{Z}^{t-1} ] = \mathbf{A}_t 
+E[\mathbf{X}_{t} | \mathbf{Z}^{t-1} ] = \mathbf{A}_t \mathbf{x}_{t}^{t-1}.
+\end{align}
+
+\begin{align}
+Var[Z_t|\mathbf{Z}^{t-1}] =& E[Var[Z_t|\mathbf{X}_{t}, \mathbf{Z}^{t-1}]|\mathbf{Z}^{t-1}] +
+Var[E[Z_{t} | \mathbf{X}_{t},\mathbf{Z}^{t-1} ]|\mathbf{Z}^{t-1}]  \\
+=& E[Var[Z_t|\mathbf{X}_{t}]|\mathbf{Z}^{t-1}] +
+Var[E[Z_{t} | \mathbf{X}_{t} ]|\mathbf{Z}^{t-1}] \\
+=& \mathbf{R} + Var[\mathbf{A}_{t}  \mathbf{X}_{t} |\mathbf{Z}^{t-1}] \\
+=&  \mathbf{R} + \mathbf{A}_{t}\mathbf{P}_{t}^{t-1} \mathbf{A}_{t}^{'}.
+\end{align}
 
 
 ---
 class: middle
-##Filtro de Kalman - Derivação
+##Atualização  - Filtro de Kalman (Hedibert Freitas Lopes)
 
-- Para obter as expressões de interesse, vamos determinar $\mathbf{X}_t^t$ e $\mathbf{P}_t^t$ em termos $\mathbf{X}_{t}^{t-1}$ e $\mathbf{P}_{t}^{t-1}.$ 
+- A atualização é desenvolvida via Teorema de Bayes
 
-- Vamos iniciar com a distribuição de $\mathbf{X}_t | \mathbf{Z}_{t-1}$ e $Z_{t} | \mathbf{Z}_{t-1}$.
+$$p(\mathbf{X}_t|\mathbf{Z}^t) = p(\mathbf{X}_t|Z_t,\mathbf{Z}^{t-1}) = \frac{p(Z_t|\mathbf{X}_t,\mathbf{Z}^{t-1})p(\mathbf{X}_t|\mathbf{Z}^{t-1})}{p(Z_t|\mathbf{Z}^{t-1})} = \frac{p(Z_t|\mathbf{X}_t)p(\mathbf{X}_t|\mathbf{Z}^{t-1}) }{p(Z_t|\mathbf{Z}^{t-1})}.$$
+- Portanto, a distribuição conjunta é dada por 
+$$p(Z_t|\mathbf{X}_t,\mathbf{Z}^{t-1})p(\mathbf{X}_t|\mathbf{Z}^{t-1}) = p(\mathbf{X}_t, Z_t|\mathbf{Z}^{t-1}),$$
 
-- Nesse caso, 
-
+- Ou seja,
 
 \begin{eqnarray}
 \left[
@@ -251,8 +304,8 @@ Z_{t} | \mathbf{Z}_{t-1}
 N \left(
   \left[
     \begin{array}{c}
-    \mathbf{X}_t^{t-1} \\
-    \mathbf{A X}_t^{t-1}
+    \mathbf{x}_t^{t-1} \\
+    \mathbf{A} \mathbf{x}_t^{t-1}
     \end{array} \right], 
   \left[
     \begin{array}{cc}
@@ -261,90 +314,33 @@ N \left(
     \end{array} \right] \right).
 \end{eqnarray}
 
----
-class: middle
-##Filtro de Kalman - Derivação
 
-Pois, 
-\begin{align}
-E[Z_t|\mathbf{Z}_{t-1}] =& E[\mathbf{A} \mathbf{X}_t + \nu_t|\mathbf{Z}_{t-1}] \\
-               =& \mathbf{A}E[ \mathbf{X}_t|\mathbf{Z}_{t-1} ] + E[\nu_t|\mathbf{Z}_{t-1}] \\
-               =&  \mathbf{A}E[ \mathbf{X}_t |\mathbf{Z}_{t-1}] + E[\nu_t] =  \mathbf{A}\mathbf{X}_{t}^{t-1},
-\end{align}
+- Aplicando [propriedades de normal multivariada](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Conditional_distributions), temos: $\mathbf{X}_t|\mathbf{Z}^t \sim N(\mathbf{x}_{t}^{t},\mathbf{P}_{t}^{t}),$ em que
 
-
-\begin{align}
-Var[Z_t|\mathbf{Z}_{t-1}] =& Var[\mathbf{A} \mathbf{X}_t + \nu_t|\mathbf{Z}_{t-1}] \\
-               =& Var[\mathbf{A} \mathbf{X}_t |\mathbf{Z}_{t-1}] + Var[\nu_t|\mathbf{Z}_{t-1}] \\
-               =&  \mathbf{A}Var[ \mathbf{X}_t |\mathbf{Z}_{t-1} ]\mathbf{A}^{'}+ Var[\nu_t] = \mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R}
-\end{align}
-e
-
-\begin{align}
-Cov[Z_t, \mathbf{X}_t |\mathbf{Z}_{t-1}] =& Cov[\mathbf{A} \mathbf{X}_t + \nu_t,\mathbf{X}_t  |\mathbf{Z}_{t-1}] \\
-               =& \mathbf{A}Cov[ \mathbf{X}_t, \mathbf{X}_t  |\mathbf{Z}_{t-1}]  + Cov[ \nu_t, \mathbf{X}_t  |\mathbf{Z}_{t-1}]\\
-               =&  \mathbf{A}Cov[ \mathbf{X}_t, \mathbf{X}_t  |\mathbf{Z}_{t-1}] \\
-                =&  \mathbf{A}Var[ \mathbf{X}_t |\mathbf{Z}_{t-1}] = \mathbf{A}\mathbf{P}_{t}^{t-1}.
-\end{align}
-
-
----
-class: middle
-##Filtro de Kalman - Derivação
-
-
-- Portanto, a distribuição condicional de $\mathbf{X}_t|\mathbf{Z}_{t-1}$ dado $Z_t|\mathbf{Z}_{t-1}$ é gaussiana com média dada por:
-
-$$\mathbf{X}_{t}^{t} =  \mathbf{X}_{t}^{t-1} + \mathbf{P}_{t}^{t-1}\mathbf{A}^{'}(\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R})^{-1}(Z_t - \mathbf{A}\mathbf{X}_{t}^{t-1})$$
+$$\mathbf{x}_{t}^{t} =  \mathbf{x}_{t}^{t-1} + \mathbf{P}_{t}^{t-1}\mathbf{A}^{'}(\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R})^{-1}(Z_t - \mathbf{A}\mathbf{x}_{t}^{t-1})$$
 e variância
 
-
 \begin{align}
-\mathbf{P}_{t}^{t} =&  \mathbf{P}_{t}^{t-1} - \mathbf{P}_{t}^{t-1}\mathbf{A}^{'}(\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R})^{-1}\mathbf{A}\mathbf{P}_{t}^{t-1}) \\
-=& \left[\mathbf{I} - \mathbf{P}_{t}^{t-1}\mathbf{A}^{'} (\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R})^{-1}\mathbf{A}\right]\mathbf{P}_{t}^{t-1}
-\end{align}
-
----
-class: middle
-##Filtro de Kalman - Derivação
-
-Para computar $\mathbf{X}_{t+1}^{t}$ e $\mathbf{P}_{t+1}^{t}$, verificamos que a distribuição de $\mathbf{X}_{t+1}^t$ é Gaussiana com média dada por:
-
-\begin{align}
-\mathbf{X}^{t}_{t+1}=E[\mathbf{X}_{t+1}|\mathbf{Z}_t] =& E[\mathbf{G}\mathbf{X}_t + \mathbf{w}_t|\mathbf{Z}_t] \\
-=& \mathbf{G}E[\mathbf{X}_t|\mathbf{Z}_t] + E[\mathbf{w}_t|\mathbf{Z}_t] \\
-=& \mathbf{G}E[\mathbf{X}_t|\mathbf{Z}_t] + E[\mathbf{w}_t] \\
-=& \mathbf{G}\mathbf{X}_{t}^{t}.
-\end{align}
-e variância dada por:
-
-\begin{align}
-\mathbf{P}^{t}_{t+1}=Var[\mathbf{X}_{t+1}|\mathbf{Z}_t] =& Var[\mathbf{G}\mathbf{X}_t + \mathbf{w}_t|\mathbf{Z}_t] \\
-=& \mathbf{G}Var[\mathbf{X}_t|\mathbf{Z}_t]\mathbf{G}^{'} + Var[\mathbf{w}_t|\mathbf{Z}_t] \\
-=& \mathbf{G}Var[\mathbf{X}_t|\mathbf{Z}_t]\mathbf{G}^{'} + Var[\mathbf{w}_t] \\
-=& \mathbf{G}\mathbf{P}_{t}^{t}\mathbf{G}^{'} + \mathbf{Q}.
+\mathbf{P}_{t}^{t} = \mathbf{P}_{t}^{t-1} - \mathbf{P}_{t}^{t-1}\mathbf{A}^{'}(\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R})^{-1}\mathbf{A}\mathbf{P}_{t}^{t-1}) 
+= \left[\mathbf{I} - \mathbf{P}_{t}^{t-1}\mathbf{A}^{'} (\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R})^{-1}\mathbf{A}\right]\mathbf{P}_{t}^{t-1}.
 \end{align}
 
 
 ---
 class: middle
-##Filtro de Kalman - Algoritmo
+##Suavizador de Kalman - Algoritmo
 
-- Admitindo condições iniciais $\mathbf{X}_0^0 = \boldsymbol{\mu}_0$ e $\mathbf{P}_0^0 = \boldsymbol{\Sigma}_0$. Para $t = 1, \ldots, N.$; temos:
+- Para os modelos dinâmicos com condições iniciais $\mathbf{x}_N^N$ e $\mathbf{P}_N^N,$ temos para $t = N, N-1, \ldots, 1.$
 
-$$\mathbf{X}_{t}^{t} =  \mathbf{X}_{t}^{t-1} + \mathbf{P}_{t}^{t-1}\mathbf{A}^{'}(\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R})^{-1}(Z_t - \mathbf{A}\mathbf{X}_{t}^{t-1}),$$
+\begin{align}
+\mathbf{x}_{t-1}^N =& \mathbf{x}_{t-1}^{t-1} + \mathbf{J}_{t-1}(\mathbf{x}_{t}^N -\mathbf{x}_{t}^{t-1} ) \\
+\mathbf{P}_{t-1}^N =& \mathbf{P}_{t-1}^{t-1} +  \mathbf{J}_{t-1}(\mathbf{P}_{t}^N - \mathbf{P}_{t}^{t-1})\mathbf{J}_{t-1}^{'}
+\end{align}
 
-$$\mathbf{P}_{t}^{t} = \left[\mathbf{I} - \mathbf{P}_{t}^{t-1}\mathbf{A}^{'} (\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R})^{-1}\mathbf{A}\right]\mathbf{P}_{t}^{t-1},$$
+em que $\mathbf{J}_{t-1} =  \mathbf{P}_{t-1}^{t-1}\mathbf{G}_t\left[\mathbf{P}_{t}^{t-1}\right]^{-1}.$
 
+- Assim, o suavizador de Kalman fornece as estimativas do vetor de estados e da matriz de covariâncias no instante $t-1$, utilizando como informação todas as observações $Z_1, Z_2, \ldots, Z_N$ da série temporal. 
 
-$$\mathbf{X}^{t}_{t+1} = \mathbf{G}\mathbf{X}_{t}^{t}$$ 
-e
-
-$$\mathbf{P}^{t}_{t+1} =  \mathbf{G}\mathbf{P}_{t}^{t}\mathbf{G}^{'} + \mathbf{Q}.$$
-
----
-class: inverse, middle, center
-##Estimadores de Máxima Verossimilhança
 
 ---
 class: middle
@@ -352,7 +348,7 @@ class: middle
 
 - A função de verossimilhança pode ser calculada através das quantidades obtidas pelo filtro de Kalman.
 
-- Suponha $Z_t | \mathbf{Z}_{t-1} \sim N(\mathbf{A}\mathbf{X}_{t}^{t-1},\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \sigma_{\nu}^2\mathbf{I})$ e considere agora $\epsilon_t = Z_t - E[Z_t|\mathbf{Z}_{t-1}]$. Dessa forma, temos:
+- Suponha $Z_t | \mathbf{Z}_{t-1} \sim N(\mathbf{A}\mathbf{x}_{t}^{t-1},\mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R})$ e considere agora $\epsilon_t = Z_t - E[Z_t|\mathbf{Z}_{t-1}]$. Dessa forma, temos:
 
 \begin{align}
   E[\epsilon_t] =& E[Z_t - E[Z_t|\mathbf{Z}_{t-1}]] \\
@@ -362,11 +358,11 @@ class: middle
 \end{align}
 
 \begin{align}
-  Var[\epsilon_t] =& Var[Z_t - E[Z_t|\mathbf{Z}_{t-1}]] \\
-  =& Var[Z_t - E[Z_t|\mathbf{Z}_{t-1}]] \\
-  =& Var[\mathbf{A}\mathbf{X}_{t} + \nu_t - \mathbf{A}\mathbf{X}_{t}^{t-1}] \\
-  =& Var[\mathbf{A}(\mathbf{X}_{t} - \mathbf{X}_{t}^{t-1})] + Var[\nu_t ] \\
-  =& \mathbf{A}Var[(\mathbf{X}_{t} - \mathbf{X}_{t}^{t-1})]\mathbf{A}^{'} + \mathbf{R} 
+  Var[\epsilon_t] =& Var[Z_t - E[Z_t|\mathbf{Z}^{t-1}]] \\
+  =& Var[Z_t - E[Z_t|\mathbf{Z}^{t-1}]] \\
+  =& Var[\mathbf{A}\mathbf{X}_{t} + \nu_t - \mathbf{A}\mathbf{x}_{t}^{t-1}] \\
+  =& Var[\mathbf{A}(\mathbf{X}_{t} - \mathbf{x}_{t}^{t-1})] + Var[\nu_t ] \\
+  =& \mathbf{A}Var[(\mathbf{X}_{t} - \mathbf{x}_{t}^{t-1})]\mathbf{A}^{'} + \mathbf{R} 
 \end{align}
 
 ---
@@ -376,33 +372,20 @@ class: middle
 - Lembrando que 
 
 \begin{align}
-E[\mathbf{X}_t - \mathbf{X}_{t}^{t-1}] =& E[\mathbf{X}_t] - E[E[\mathbf{X}_t^{t-1}]] \\
-=& E[\mathbf{X}_t] - E[E[\mathbf{X}_t|\mathbf{Z}_{t-1}]]  \\
-=&  E[\mathbf{X}_t] - E[\mathbf{X}_t] = \mathbf{0}
-\end{align}
-
-
-Por consequência, 
-
-\begin{align}
-Var[(\mathbf{X}_{t} - \mathbf{X}_{t}^{t-1})] =& E[(\mathbf{X}_t - \mathbf{X}_{t}^{t-1})(\mathbf{X}_t - \mathbf{X}_{t}^{t-1})^{'} ] \\
-=&  E[(\mathbf{X}_t - \mathbf{X}_{t}^{t-1})(\mathbf{X}_t - \mathbf{X}_{t}^{t-1})^{'}|\mathbf{Z}_{t-1} ] = \mathbf{P}_{t}^{t-1}
+Var[(\mathbf{X}_{t} - \mathbf{x}_{t}^{t-1})] =& E[(\mathbf{X}_t - \mathbf{x}_{t}^{t-1})(\mathbf{X}_t - \mathbf{x}_{t}^{t-1})^{'} ] \\
+=&  E[(\mathbf{X}_t - \mathbf{x}_{t}^{t-1})(\mathbf{X}_t - \mathbf{x}_{t}^{t-1})^{'}|\mathbf{Z}^{t-1} ] = \mathbf{P}_{t}^{t-1}
 \end{align}
 
 Logo,
-
 
 \begin{align}
  \boldsymbol{\Sigma}_{\epsilon_t} = Var[\epsilon_t] = \mathbf{A}\mathbf{P}_{t}^{t-1}\mathbf{A}^{'} + \mathbf{R}. 
 \end{align}
 
----
-class: middle
-##Função de Verossimilhança
 
 Assim, podemos definir o logaritmo da função de verossimilhança da seguinte forma
 
-$$l = -\frac{1}{2}\sum_{t=1}^N\log|\boldsymbol{\Sigma}_{\epsilon_t}| - \frac{1}{2}\sum_{t=1}^N \boldsymbol{\epsilon}_t^{'}\boldsymbol{\Sigma}_{\epsilon_t}^{-1}\boldsymbol{\epsilon}_t,$$
+$$l(\Theta|\mathbf{Z}) = -\frac{1}{2}\sum_{t=1}^N\log|\boldsymbol{\Sigma}_{\epsilon_t}| - \frac{1}{2}\sum_{t=1}^N \boldsymbol{\epsilon}_t^{'}\boldsymbol{\Sigma}_{\epsilon_t}^{-1}\boldsymbol{\epsilon}_t,$$
 
 - Nesse caso, o logaritmo da função de verossmilhança é não linear com relação aos parâmetros, então métodos numéricos devem ser adotados.
 

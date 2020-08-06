@@ -267,7 +267,7 @@ pois os valores de `\(k\)` e `\(l\)` que minimizam esta última expressão são 
 
 - Schwarz (1978) sugerem minimizar o critério de informação Bayesiano (1978), que no caso de um modelo ARMA é dado por:
 
-`$$BIC(k,l) = \ln{\hat{\sigma}^2_{k,l}} + (k+l)\frac{\ln}{N}.$$`
+`$$BIC(k,l) = \ln{\hat{\sigma}^2_{k,l}} + (k+l)\frac{\ln N}{N}.$$`
 em que `\(\hat{\sigma}^2_{k,l}\)` é a estimativa de máxima verossimilhança da variância residual do modelo ARMA(k,l).
 
 
@@ -585,7 +585,7 @@ class: middle
 
 - Seguindo as recomendações feitas por McLeod (1983), observa-se que para `\(d=2\)` (duas diferenças),  a estimativa de `\(\rho_1\)` é próximo de `\(-0.5\)` (-0.31), o que indica um excesso de diferença.
 
-- Portanto,  olhando as estimativas de autocorrelações e autocorrelações parciais com `\((d=1)\)`, tem-se que o modelo escolhido é `\(ARMA(1,1,0).\)`
+- Portanto,  olhando as estimativas de autocorrelações e autocorrelações parciais com `\((d=1)\)`, tem-se que o modelo escolhido é `\(ARIMA(1,1,0).\)`
 
 
 
