@@ -339,7 +339,7 @@ class: middle
 
 em que $\mathbf{J}_{t-1} =  \mathbf{P}_{t-1}^{t-1}\mathbf{G}_t\left[\mathbf{P}_{t}^{t-1}\right]^{-1}.$
 
-- Assim, o suavizador de Kalman fornece as estimativas do vetor de estados e da matriz de covariâncias no instante $t-1$, utilizando como informação todas as observações $Z_1, Z_2, \ldots, Z_N$ da série temporal. 
+- Assim, o suavizador de Kalman fornece as estimativas do vetor de estados e da matriz de covariâncias no instante $t-1$, utilizando como informação todas as observações $Z_1, Z_2, \ldots, Z_N$ da série temporal. [explicações](https://communities.sas.com/t5/SAS-Communities-Library/Kalman-Filtering-and-Kalman-Smoothing-in-PROC-UCM/ta-p/338797#:~:text=Kalman%20filtering%20uses%20all%20the,and%20uses%20all%20the%20data.&text=The%20smoothing%20gives%20a%20good,matrix%20of%20the%20state%20variables.) [ou](https://christophertonetti.com/files/notes/Nakata_Tonetti_KalmanFilterAndSmoother.pdf.) 
 
 
 ---
@@ -495,6 +495,30 @@ if (mod$code != 0) stop("optimizer did not converge")
 
 ```
 
+
+---
+class: middle
+##Código em R 
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+dados = ts(log(dat$ICV), start=c(1970,1), frequency=12)
+
+#Ajuste de um modelo com tendência local  
+mod <- StructTS(dados, type = "trend")
+if (mod$code != 0) stop("optimizer did not converge")
+
+cat("Transitional variance:", mod$coef["level"],
+"\n", "Slope variance:", mod$coef["slope"],
+"\n", "Observational variance:", mod$coef["epsilon"],
+"\n")
+
+```
+
+
+---
+class: middle
+
 ####Estimativas dos Parâmetros de Variâncias
 ```{r, echo = FALSE, warning=FALSE, message=FALSE}
 cat("Transitional variance:", mod$coef["level"],
@@ -504,17 +528,131 @@ cat("Transitional variance:", mod$coef["level"],
 
 ```
 
----
-class: middle
 
-###Valores preditos dos estados latentes
+
+###Valores preditos dos estados latentes (Filtro de Kalman)
 
 ```{r, echo = FALSE, warning=FALSE, message=FALSE}
 data.frame(Obs=120:126,Pred= mod$fitted[120:126,])
 ```
 
-####Teste de Ljung Box
+####Código para Diagnostico do Modelo
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+tsdiag(mod)
+```
+
+---
+class: middle
+
+##Diagnostico do Modelo
 
 ```{r, echo = FALSE, warning=FALSE, message=FALSE}
-Box.test(mod$residuals)
+tsdiag(mod)
 ```
+
+
+
+---
+class:  middle
+
+##Suavização - Código em R
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+pred = tsSmooth(mod)
+plot(pred)
+```
+                                         
+
+---
+class:  middle
+
+##Suavização - Código em R
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+pred = tsSmooth(mod)
+plot(pred)
+```
+  
+##Previsão 12 meses na frente
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+KalmanForecast(mod$model,n.ahead=12)
+```   
+
+---
+class:  middle
+
+##Suavização - Código em R
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+pred = tsSmooth(mod)
+plot(pred)
+```
+
+---
+class:  middle
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+KalmanForecast(mod$model,n.ahead=12)
+```    
+
+---
+class: middle
+
+##Interpretação dos Resultados 
+
+
+- Analises dos resultados sugerem que o ruído da observação seja nulo, pois, $\sigma^2_{\epsilon} = 0.$ (Conclusão tirada do livro do Morettin).
+
+- Uma vez que a variância da inclinação também é um valor baixo, vamos testar o modelo de passeio aleatório.
+
+
+---
+class: middle
+####Exemplos 1 - Passeio Aleatório
+
+\begin{align}
+Z_t   =& \mu_t \\
+\mu_t =& \mu_{t-1} +  \eta_t.
+\end{align}
+
+####Modelo Estrutural na Forma de Espaço de Estados
+
+Reconhecendo que $\mathbf{A}_t = 1, \mathbf{X_t} = \mu_t, \nu_t = 0, \mathbf{G}_t = 1, w_t = \eta_t$, tem-se o modelo de passeio aleatório representado como um modelo de espaço de estados.
+
+
+
+---
+class: middle
+####Passeio Aleatório - Código no R
+
+```{r,  warning=FALSE, message=FALSE}
+
+mod2 = StructTS(dados, type = "level", fixed = c(NA,0))
+
+cat("Transitional variance:", mod2$coef["level"],"\n")
+
+```
+
+
+
+---
+class: middle
+
+##Diagnostico do Modelo
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+tsdiag(mod2)
+```
+
+---
+class: middle
+
+####Interpretação dos Resultados 
+
+ - Entre esses dois modelos ficamos com o primeiro, pois análise de diagnostico do passeio aleatório indica que o modelo está mal especificado.
+ 
+ 
+

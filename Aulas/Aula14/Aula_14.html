@@ -91,7 +91,7 @@ library(forecast)
 ```r
 ##Simulando um modelo ARIMA(1,0,1)
 set.seed(30)
-ts.sim &lt;- arima.sim(list(order = c(1,0,1), ar = 0.8, ma=0.5), n = 200)
+ts.sim &lt;- arima.sim(list(order = c(1,0,1), ar = 0.8, ma=0.8), n = 50)
 ##Plotando a série
 ts.sim %&gt;% autoplot()
 ```

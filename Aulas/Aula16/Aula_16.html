@@ -15,7 +15,7 @@ class: center, middle, inverse, title-slide
 ## Material baseado no livro de Morettin e Toloi (2004)
 ### Renato Rodrigues Silva
 ### Universidade Federal de Goiás.
-### (updated: 2020-08-05)
+### (updated: 2020-08-07)
 
 ---
 
@@ -344,7 +344,7 @@ class: middle
 
 em que `\(\mathbf{J}_{t-1} =  \mathbf{P}_{t-1}^{t-1}\mathbf{G}_t\left[\mathbf{P}_{t}^{t-1}\right]^{-1}.\)`
 
-- Assim, o suavizador de Kalman fornece as estimativas do vetor de estados e da matriz de covariâncias no instante `\(t-1\)`, utilizando como informação todas as observações `\(Z_1, Z_2, \ldots, Z_N\)` da série temporal. 
+- Assim, o suavizador de Kalman fornece as estimativas do vetor de estados e da matriz de covariâncias no instante `\(t-1\)`, utilizando como informação todas as observações `\(Z_1, Z_2, \ldots, Z_N\)` da série temporal. [explicações](https://communities.sas.com/t5/SAS-Communities-Library/Kalman-Filtering-and-Kalman-Smoothing-in-PROC-UCM/ta-p/338797#:~:text=Kalman%20filtering%20uses%20all%20the,and%20uses%20all%20the%20data.&amp;text=The%20smoothing%20gives%20a%20good,matrix%20of%20the%20state%20variables.) [ou](https://christophertonetti.com/files/notes/Nakata_Tonetti_KalmanFilterAndSmoother.pdf.) 
 
 
 ---
@@ -467,6 +467,29 @@ Z_t =&amp;
 
 
 
+
+---
+class: middle
+##Código em R 
+
+
+```r
+dados = ts(log(dat$ICV), start=c(1970,1), frequency=12)
+
+#Ajuste de um modelo com tendência local  
+mod &lt;- StructTS(dados, type = "trend")
+if (mod$code != 0) stop("optimizer did not converge")
+
+cat("Transitional variance:", mod$coef["level"],
+"\n", "Slope variance:", mod$coef["slope"],
+"\n", "Observational variance:", mod$coef["epsilon"],
+"\n")
+```
+
+
+---
+class: middle
+
 ####Estimativas dos Parâmetros de Variâncias
 
 ```
@@ -475,10 +498,9 @@ Z_t =&amp;
 ##  Observational variance: 0
 ```
 
----
-class: middle
 
-###Valores preditos dos estados latentes
+
+###Valores preditos dos estados latentes (Filtro de Kalman)
 
 
 ```
@@ -492,16 +514,127 @@ class: middle
 ## 7 126   7.225481 0.04791963
 ```
 
-####Teste de Ljung Box
+####Código para Diagnostico do Modelo
+
+
+```r
+tsdiag(mod)
+```
+
+---
+class: middle
+
+##Diagnostico do Modelo
+
+![](Aula_16_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+
+
+---
+class:  middle
+
+##Suavização - Código em R
+
+![](Aula_16_files/figure-html/unnamed-chunk-8-1.png)&lt;!-- --&gt;
+                                         
+
+---
+class:  middle
+
+##Suavização - Código em R
+
+
+```r
+pred = tsSmooth(mod)
+plot(pred)
+```
+  
+##Previsão 12 meses na frente
+
+
+```r
+KalmanForecast(mod$model,n.ahead=12)
+```
+
+---
+class:  middle
+
+##Suavização - Código em R
+
+![](Aula_16_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+
+---
+class:  middle
+
 
 
 ```
+## $pred
+##  [1] 7.273401 7.321321 7.369240 7.417160 7.465080 7.512999 7.560919 7.608839
+##  [9] 7.656758 7.704678 7.752597 7.800517
 ## 
-## 	Box-Pierce test
-## 
-## data:  mod$residuals
-## X-squared = 0.013729, df = 1, p-value = 0.9067
+## $var
+##  [1] 0.0001391554 0.0003538336 0.0006603425 0.0010749895 0.0016140824
+##  [6] 0.0022939289 0.0031308365 0.0041411130 0.0053410659 0.0067470030
+## [11] 0.0083752318 0.0102420601
 ```
+
+---
+class: middle
+
+##Interpretação dos Resultados 
+
+
+- Analises dos resultados sugerem que o ruído da observação seja nulo, pois, `\(\sigma^2_{\epsilon} = 0.\)` (Conclusão tirada do livro do Morettin).
+
+- Uma vez que a variância da inclinação também é um valor baixo, vamos testar o modelo de passeio aleatório.
+
+
+---
+class: middle
+####Exemplos 1 - Passeio Aleatório
+
+`\begin{align}
+Z_t   =&amp; \mu_t \\
+\mu_t =&amp; \mu_{t-1} +  \eta_t.
+\end{align}`
+
+####Modelo Estrutural na Forma de Espaço de Estados
+
+Reconhecendo que `\(\mathbf{A}_t = 1, \mathbf{X_t} = \mu_t, \nu_t = 0, \mathbf{G}_t = 1, w_t = \eta_t\)`, tem-se o modelo de passeio aleatório representado como um modelo de espaço de estados.
+
+
+
+---
+class: middle
+####Passeio Aleatório - Código no R
+
+
+```r
+mod2 = StructTS(dados, type = "level", fixed = c(NA,0))
+
+cat("Transitional variance:", mod2$coef["level"],"\n")
+```
+
+```
+## Transitional variance: 0.0007669502
+```
+
+
+
+---
+class: middle
+
+##Diagnostico do Modelo
+
+![](Aula_16_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+
+####Interpretação dos Resultados 
+
+ - Entre esses dois modelos ficamos com o primeiro, pois análise de diagnostico do passeio aleatório indica que o modelo está mal especificado.
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
