@@ -468,7 +468,7 @@ class: middle
 
 ```r
 ##Função de Autocorrelação Parcial
-mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,0), seasonal = c(0,1,1), include.drift = TRUE)
+mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,0), seasonal = c(0,1,1), include.drift = FALSE)
 
 summary(mod)
 ```
@@ -480,40 +480,26 @@ class: middle
 
 ```
 ## Series: ts(dat$Precipitação, frequency = 12, start = 1966) 
-## ARIMA(0,0,0)(0,1,1)[12] with drift 
+## ARIMA(0,0,0)(0,1,1)[12] 
 ## 
 ## Coefficients:
-##          sma1   drift
-##       -0.9998  0.0233
-## s.e.   0.0567  0.0375
+##          sma1
+##       -1.0000
+## s.e.   0.0602
 ## 
-## sigma^2 estimated as 6049:  log likelihood=-2097.76
-## AIC=4201.52   AICc=4201.59   BIC=4213.18
+## sigma^2 estimated as 6038:  log likelihood=-2097.95
+## AIC=4199.91   AICc=4199.94   BIC=4207.68
 ## 
 ## Training set error measures:
-##                      ME    RMSE      MAE  MPE MAPE      MASE      ACF1
-## Training set -0.9234422 76.2969 52.66411 -Inf  Inf 0.6677707 -0.105588
+##                    ME     RMSE      MAE  MPE MAPE      MASE       ACF1
+## Training set 1.243987 76.33282 52.23838 -Inf  Inf 0.6623725 -0.1044542
 ```
-
 
 ---
 class: middle
 ##Sazonalidade estocástica - Exemplo no R
 
-
-```r
-Box.test(mod$residuals, type="Ljung-Box")
-```
-
-```
-## 
-## 	Box-Ljung test
-## 
-## data:  mod$residuals
-## X-squared = 4.1809, df = 1, p-value = 0.04088
-```
-
-- Modelo proposto não está ok.
+![](Aula_15_files/figure-html/unnamed-chunk-24-1.png)&lt;!-- --&gt;
 
 ---
 class: middle
@@ -527,18 +513,15 @@ class: middle
 class: middle
 ##Sazonalidade estocástica - Exemplo no R
 
-![](Aula_15_files/figure-html/unnamed-chunk-26-1.png)&lt;!-- --&gt;
 
-- Modelo proposto não está ok.
+```r
+auto.arima(ts(dat$Precipitação, frequency = 12, start=1966 ), seasonal = T)
+```
 
 ---
 class: middle
 ##Sazonalidade estocástica - Exemplo no R
 
-
-```r
-auto.arima(ts(dat$Precipitação, frequency = 12, start=1966 ), seasonal = T)
-```
 
 
 ---
@@ -566,19 +549,15 @@ class: middle
 
 
 ```r
-mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,1), seasonal = c(2,1,0), include.drift = TRUE,
-            include.mean = FALSE)
-
-Box.test(mod$residuals, type="Ljung-Box")
+mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,1), seasonal = c(2,1,0))
 ```
 
-```
-## 
-## 	Box-Ljung test
-## 
-## data:  mod$residuals
-## X-squared = 0.068266, df = 1, p-value = 0.7939
-```
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+![](Aula_15_files/figure-html/unnamed-chunk-29-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -587,15 +566,60 @@ class: middle
 
 ![](Aula_15_files/figure-html/unnamed-chunk-30-1.png)&lt;!-- --&gt;
 
-- Modelo automático está ok.
+
 
 ---
 class: middle
 ##Sazonalidade estocástica - Exemplo no R
 
-![](Aula_15_files/figure-html/unnamed-chunk-31-1.png)&lt;!-- --&gt;
 
-- Modelo automático está ok.
+
+```r
+checkresiduals(mod,  plot=  TRUE)
+
+checkresiduals(mod,  plot=  FALSE)
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+![](Aula_15_files/figure-html/unnamed-chunk-32-1.png)&lt;!-- --&gt;
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(0,0,1)(2,1,0)[12]
+## Q* = 31.189, df = 21, p-value = 0.07056
+## 
+## Model df: 3.   Total lags used: 24
+```
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(0,0,1)(2,1,0)[12]
+## Q* = 31.189, df = 21, p-value = 0.07056
+## 
+## Model df: 3.   Total lags used: 24
+```
+
+
+---
+##Considerações Finais
+
+- O modelo automático ainda não está ok para todos os testes
+- Na próxima aula, vamos propor alguns modelos e verificar quais deles fornece melhor previsão.
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

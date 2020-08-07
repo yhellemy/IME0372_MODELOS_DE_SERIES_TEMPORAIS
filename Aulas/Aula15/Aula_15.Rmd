@@ -482,7 +482,7 @@ class: middle
 
 ```{r, eval= FALSE, warning=FALSE, message=FALSE}
 ##Função de Autocorrelação Parcial
-mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,0), seasonal = c(0,1,1), include.drift = TRUE)
+mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,0), seasonal = c(0,1,1), include.drift = FALSE)
 
 summary(mod)
 ```
@@ -493,22 +493,10 @@ class: middle
 
 ```{r, echo= FALSE, warning=FALSE, message=FALSE}
 ##Função de Autocorrelação Parcial
-mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,0), seasonal = c(0,1,1), include.drift = TRUE,
-            include.mean = FALSE)
+mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,0), seasonal = c(0,1,1), include.drift = FALSE)
 
 summary(mod)
 ```
-
-
----
-class: middle
-##Sazonalidade estocástica - Exemplo no R
-
-```{r, warning=FALSE, message=FALSE}
-Box.test(mod$residuals, type="Ljung-Box")
-```
-
-- Modelo proposto não está ok.
 
 ---
 class: middle
@@ -517,8 +505,6 @@ class: middle
 ```{r, echo=FALSE,warning=FALSE, message=FALSE}
 acf(mod$residuals)
 ```
-
-- Modelo proposto não está ok.
 
 ---
 class: middle
@@ -538,6 +524,11 @@ class: middle
 auto.arima(ts(dat$Precipitação, frequency = 12, start=1966 ), seasonal = T)
 ```
 
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
 
 ---
 class: middle
@@ -554,10 +545,9 @@ class: middle
 
 ```{r, warning=FALSE, message=FALSE}
 
-mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,1), seasonal = c(2,1,0), include.drift = TRUE,
-            include.mean = FALSE)
+mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,1), seasonal = c(2,1,0))
 
-Box.test(mod$residuals, type="Ljung-Box")
+
 ```
 
 
@@ -569,7 +559,6 @@ class: middle
 acf(mod$residuals)
 ```
 
-- Modelo automático está ok.
 
 ---
 class: middle
@@ -579,4 +568,44 @@ class: middle
 pacf(mod$residuals)
 ```
 
-- Modelo automático está ok.
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+```{r, eval=FALSE,warning=FALSE, message=FALSE}
+checkresiduals(mod,  plot=  TRUE)
+
+checkresiduals(mod,  plot=  FALSE)
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+```{r, echo=FALSE,warning=FALSE, message=FALSE}
+checkresiduals(mod,  plot=  TRUE)
+```
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+```{r, echo=FALSE,warning=FALSE, message=FALSE}
+
+checkresiduals(mod,  plot=  FALSE)
+```
+
+
+---
+##Considerações Finais
+
+- O modelo automático ainda não está ok para todos os testes
+- Na próxima aula, vamos propor alguns modelos e verificar quais deles fornece melhor previsão.
+
+
