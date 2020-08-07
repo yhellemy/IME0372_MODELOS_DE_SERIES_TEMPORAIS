@@ -473,7 +473,7 @@ class: middle
 pacf(diff(dat$Precipitação, differences=1, lag=12), lag=36)
 ```
 
-- Modelo inicial $SARIMA_{12}(0,1,1)$ (Segundo Morettin)
+- Modelo inicial $SARIMA_{12}(0,0,0)\times(0,1,1)$ (Segundo Morettin)
 
 
 ---
