@@ -60,7 +60,7 @@ class: middle
 (1 - B^{12}) Z_t =& (1 - B^{12}) N_t.
 \end{align}
 
-Substituindo a ultima expressão em $\phi(B)N_t = \theta(B) a_t,$ temos
+Substituindo $\phi(B)N_t = \theta(B) a_t$ na ultima expressão, temos:
 
 \begin{align}
 \phi(B)(1 - B^{12}) Z_t = \theta(B)(1 - B^{12}) a_t \\
