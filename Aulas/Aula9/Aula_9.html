@@ -15,7 +15,7 @@ class: center, middle, inverse, title-slide
 ## Material baseado no livro Time Series Analysis: Univariate and Multivariate Methods (Willian W. S. Wei, 1990)
 ### Renato Rodrigues Silva
 ### Universidade Federal de Goiás.
-### (updated: 2020-07-24)
+### (updated: 2020-08-07)
 
 ---
 
@@ -46,7 +46,7 @@ independentes estejam disponíveis.
 
 - Vamos assumir que o processo  `\(\left\{ Z_t, t \in \mathcal{Z} \right\}\)` seja estacionário de segunda ordem 
 
-    - `\(E[Z_t) = \mu\)`; (média constante)
+    - `\(E[Z_t] = \mu\)`; (média constante)
     - `\(E[Z^2_t] &lt; \infty, \phantom{11} \forall t \in \mathbf{Z}\)`; 
     - `\(Cov[Z_{t}, Z_{s}]\)` é uma função de `\(|t - s|\)`.
 
@@ -421,6 +421,16 @@ sum(lag(yt,2)*yt, na.rm=T) / sum(yt^2)
 ```
 ## [1] 0.8755748
 ```
+
+---
+class: middle
+
+
+```r
+acf(dataset$value, type="correlation", lag.max =20 ,plot = TRUE)
+```
+
+![](Aula_9_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

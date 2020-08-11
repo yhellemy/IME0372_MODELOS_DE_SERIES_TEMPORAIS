@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Estudo de Caso 1</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Estudo de Caso 1
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-08-11)
+
+---
+
+class: middle
+##Introdução
+
+- Nessa aula, faremos alguns exercícios sobre séries sazonais.
+
+- Além disso, faremos uma complementação da teoria explicando como se faz previsão.
+
+---
+class: middle, inverse, center
+
+##Conjunto de dados 1: Lavras
+
+---
+class: middle
+##Conjunto de dados 1: Lavras
+
+ - Precipitação atmosférica em Lavras, MG.
+ 
+ - Observações mensais de janeiro de 1966 a dezembro de 1997.
+ 
+ - Vamos ajustar um modelo com os dados de janeiro de 1996 até dezembro de 1996.
+ 
+ - Faremos a previsão para os dados de janeiro de 1997 até dezembro de 1997.
+ 
+ - Vamos comparar essa previsão com os dados reais.
+
+
+---
+class: middle, inverse, center
+##Análise Exploratória da Série
+
+---
+class: middle
+##Gráfico da Série
+
+
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Gráfico Sazonal
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série Original
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série Original
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle, inverse, center
+##Metodologia Box Jenkins
+
+---
+class: middle
+###Identificação: Autocorrelação - Série `\((1 - B^{12})Z_t\)`
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Identificação:  Autocorrelação Parcial - Série `\((1 - B^{12})Z_t\)`
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Identificação: Primeiro Modelo Proposto
+
+`$$(1 - B^{12})Z_t = (1 - \Theta_1 B^{12})a_t + \theta_0.$$`
+- Observe que esse modelo tem apenas uma diferença e um parâmetro de média móvel da parte sazonal. A parte não sazonal simplesmente ainda não foi modelada.
+
+- Os próximos passos estimar os parâmetros e fazer o diagnóstico do modelo.
+
+####Interpretação dos Parâmetros: Esse link tem um comentário [interessante](https://stats.stackexchange.com/questions/40905/arima-model-interpretation)
+
+---
+class: middle
+##Estimação: Primeiro Modelo Proposto
+
+
+```
+## Series: lavras 
+## ARIMA(0,0,0)(0,1,1)[12] with drift 
+## 
+## Coefficients:
+##          sma1   drift
+##       -0.9998  0.0233
+## s.e.   0.0567  0.0375
+## 
+## sigma^2 estimated as 6049:  log likelihood=-2097.76
+## AIC=4201.52   AICc=4201.59   BIC=4213.18
+## 
+## Training set error measures:
+##                      ME    RMSE      MAE  MPE MAPE      MASE      ACF1
+## Training set -0.9234422 76.2969 52.66411 -Inf  Inf 0.6677707 -0.105588
+```
+
+####Constantes nos modelos [ARIMA - software R](https://robjhyndman.com/hyndsight/arimaconstants/)
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação - Residuos do Primeiro Modelo Proposto
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-9-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial - Residuos do Primeiro Modelo Proposto
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Identificação: Segundo Modelo Proposto
+
+`$$(1-\phi_1B - \phi_9B^9 - \phi_{15}B^{15}) (1 - B^{12})Z_t = (1 - \Theta_1 B^{12})a_t + \theta_0.$$`
+
+- Por meio de inspeção visual do intervalo de confiança das autocorrelações parciais, infere-se `\(\phi{11} \neq  0, \phi{99} \neq 0\)` e `\(\phi{15 15} \neq  0\)`.
+
+- Assim, sugere-se adicionar um polinômio autoregressivo no modelo.
+
+---
+class: middle
+##Estimação: Segundo Modelo Proposto
+
+
+```
+## Series: lavras 
+## ARIMA(15,0,0)(0,1,1)[12] with drift 
+## 
+## Coefficients:
+##           ar1  ar2  ar3  ar4  ar5  ar6  ar7  ar8     ar9  ar10  ar11  ar12
+##       -0.0913    0    0    0    0    0    0    0  0.1087     0     0     0
+## s.e.   0.0079    0    0    0    0    0    0    0  0.0103     0     0     0
+##       ar13  ar14     ar15     sma1   drift
+##          0     0  -0.1419  -1.0040  0.0266
+## s.e.     0     0   0.0093   0.0414  0.0329
+## 
+## sigma^2 estimated as 5814:  log likelihood=-2090.23
+## AIC=4192.47   AICc=4192.7   BIC=4215.78
+## 
+## Training set error measures:
+##                     ME     RMSE      MAE MPE MAPE      MASE       ACF1
+## Training set -0.815817 74.48829 50.91162 NaN  Inf 0.6455495 0.00233649
+```
+
+####Comentário Bryan [Ripley](https://stat.ethz.ch/pipermail/r-help/2004-January/044449.html) sobre colocar parâmetros fixos.
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação - Residuos do Segundo Modelo Proposto
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial - Residuos do Segundo Modelo Proposto
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(15,0,0)(0,1,1)[12] with drift
+## Q* = 10.968, df = 7, p-value = 0.14
+## 
+## Model df: 17.   Total lags used: 24
+```
+
+####Quantos lags devem ser usados ??
+
+- Em geral, basta utilizar as 10 ou 15 primeiras `\(\hat{r}_k\)` (Morettin &amp; Toloi, 2004).
+
+- O valor do total de lags é escolhido de uma certa forma, arbitrariamente, tipicamente, igual a 20. (Robert H. Shumway &amp; David S. Stoffer, 2016)  
+
+
+---
+class: middle, inverse, center
+##Método Automático de Seleção de Modelos
+
+---
+####Algoritmo Hyndman-Khandakar implementado na função [`auto.arima()`](https://www.researchgate.net/publication/222105759_Automatic_Time_Series_Forecasting_The_forecast_Package_for_R)
+
+1.  O número de diferenças `\(0 \leq d \leq 2\)` é determinada usando o teste KPSS.
+
+2.  Os valores de `\(p\)` e `\(q\)` são então escolhidos para minimizar o AICc após diferenciar os dados `\(d\)` vezes.
+
+  a.  Para 4 modelos iniciais:
+      - `\(ARIMA(0,d,0)\)` ou `\(SARIMA(0,d,0)(0,D,0)_s\)`
+      - `\(ARIMA(2,d,2)\)` ou `\(SARIMA(2,d,2)(1,D,1)_s\)`
+      - `\(ARIMA(1,d,0)\)` ou `\(SARIMA(1,d,0)(1,D,0)_s\)`
+      - `\(ARIMA(0,d,1)\)` ou `\(SARIMA(0,d,1)(0,D,1)_s\)`
+     
+      Uma constante é incluída exceto se `\(d=2\)`. Se `\(d \leq 1\)`, um modelo adicional é incluído sem a constante.
+      
+  b.   O modelo com menor AICc é escolhido como "melhor modelo atual"
+  
+  c.   Variações no atual modelo são consideradas
+      - variar `\(p\)` e/ou `\(q\)` a partir do modelo atual `\(\pm 1\)`
+      - incluir ou excluir a constante do modelo
+      O modelo com menor AICc torna-se o "melhor modelo atual"
+      
+  d. Repete-se os passo 2 c até não encontrar modelo com menor AICc.
+  
+  
+---
+###Ajuste algoritmo `auto.arima()`
+
+
+
+```
+## 
+##  Fitting models using approximations to speed things up...
+## 
+##  ARIMA(2,0,2)(1,1,1)[12] with drift         : Inf
+##  ARIMA(0,0,0)(0,1,0)[12] with drift         : 4296.164
+##  ARIMA(1,0,0)(1,1,0)[12] with drift         : 4199.955
+##  ARIMA(0,0,1)(0,1,1)[12] with drift         : 4111.871
+##  ARIMA(0,0,0)(0,1,0)[12]                    : 4294.147
+##  ARIMA(0,0,1)(0,1,0)[12] with drift         : 4295.995
+##  ARIMA(0,0,1)(1,1,1)[12] with drift         : 4101.508
+##  ARIMA(0,0,1)(1,1,0)[12] with drift         : 4207.352
+##  ARIMA(0,0,1)(2,1,1)[12] with drift         : 4096.1
+##  ARIMA(0,0,1)(2,1,0)[12] with drift         : 4130.468
+##  ARIMA(0,0,1)(2,1,2)[12] with drift         : Inf
+##  ARIMA(0,0,1)(1,1,2)[12] with drift         : 4103.004
+##  ARIMA(0,0,0)(2,1,1)[12] with drift         : 4100.931
+##  ARIMA(1,0,1)(2,1,1)[12] with drift         : 4098.223
+##  ARIMA(0,0,2)(2,1,1)[12] with drift         : 4096.269
+##  ARIMA(1,0,0)(2,1,1)[12] with drift         : 4096.702
+##  ARIMA(1,0,2)(2,1,1)[12] with drift         : 4096.655
+##  ARIMA(0,0,1)(2,1,1)[12]                    : 4096.292
+## 
+##  Now re-fitting the best model(s) without approximations...
+## 
+##  ARIMA(0,0,1)(2,1,1)[12] with drift         : Inf
+##  ARIMA(0,0,2)(2,1,1)[12] with drift         : Inf
+##  ARIMA(0,0,1)(2,1,1)[12]                    : Inf
+##  ARIMA(1,0,2)(2,1,1)[12] with drift         : Inf
+##  ARIMA(1,0,0)(2,1,1)[12] with drift         : Inf
+##  ARIMA(1,0,1)(2,1,1)[12] with drift         : Inf
+##  ARIMA(0,0,0)(2,1,1)[12] with drift         : Inf
+##  ARIMA(0,0,1)(1,1,1)[12] with drift         : Inf
+##  ARIMA(0,0,1)(1,1,2)[12] with drift         : Inf
+##  ARIMA(0,0,1)(0,1,1)[12] with drift         : Inf
+##  ARIMA(0,0,1)(2,1,0)[12] with drift         : 4245.962
+## 
+##  Best model: ARIMA(0,0,1)(2,1,0)[12] with drift
+```
+
+```
+## Series: lavras 
+## ARIMA(0,0,1)(2,1,0)[12] with drift 
+## 
+## Coefficients:
+##           ma1     sar1     sar2   drift
+##       -0.1188  -0.7046  -0.4306  0.0256
+## s.e.   0.0479   0.0482   0.0477  0.1597
+## 
+## sigma^2 estimated as 7453:  log likelihood=-2117.9
+## AIC=4245.79   AICc=4245.96   BIC=4265.22
+```
+
+
+---
+###Ajuste algoritmo `auto.arima()`
+
+
+```
+## Series: lavras 
+## ARIMA(0,0,1)(2,1,0)[12] with drift 
+## 
+## Coefficients:
+##           ma1     sar1     sar2   drift
+##       -0.1188  -0.7046  -0.4306  0.0256
+## s.e.   0.0479   0.0482   0.0477  0.1597
+## 
+## sigma^2 estimated as 7453:  log likelihood=-2117.9
+## AIC=4245.79   AICc=4245.96   BIC=4265.22
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação - Residuos de `auto.arima()`
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação - Residuos de `auto.arima()`
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(0,0,1)(2,1,0)[12] with drift
+## Q* = 31.184, df = 20, p-value = 0.05281
+## 
+## Model df: 4.   Total lags used: 24
+```
+
+---
+class: middle, inverse, center
+##Previsão dos modelos
+
+
+---
+class: middle
+##Previsão dos modelos (Rob Hyndman)
+
+###Modelo [ARIMA](https://otexts.com/fpp2/arima-forecasting.html)
+
+- As previsões pontuais de um processo ARIMA  podem ser calculadas usando as três etapas a seguir.
+
+1.  Faça a expansão do modelo ARIMA tal que `\(Z_t\)` esteja no lado esquerdo e todos os outros termos estejam no lado direito.
+
+2.  Rescreva a equação substituindo `\(t\)` por `\(t+h\)` em que `\(h\)` é denominado horizonte de previsão.
+
+3.  No lado direito da equação, substitua as observações futuras por suas previsões, os erros futuros por zero e os erros passados pelos resíduos correspondentes.
+
+- Começando com `\(h=1\)`, essas etapas são repetidas para `\(h = 2,3, \ldots\)` até todas previsões serem calculadas.
+
+**Obs: Pode-se calcular a previsão de um modelo sazonal multiplicativo de modo análogo**.
+
+
+---
+class: middle
+##Previsão dos modelos
+
+- Considerando que o modelo SARIMA de ordem `\((p,d,q) \times (P, D, Q)_{s}\)` é dado por: `\(\phi(B)\Phi(B^{12})\Delta^d\Delta^{D}_{12}Z_t = \theta(B)\Theta(B^{12})a_t.\)`
+
+- Supondo ainda que o modelo correto seja ARIMA(0,0,1)(2,1,0)[12] with drift, temos:
+
+`\begin{align}
+(1 - \Phi_1 B^{12} - \Phi_2 B^{24})(1-B^{12})Z_t =&amp; (1 - \theta_1 B)a_t + \theta_0 \\
+(1 - \Phi_1 B^{12} - \Phi_2 B^{24} - B^{12} + \Phi_1 B^{24} + \Phi_2 B^{36}) Z_t =&amp; (1 - B \theta_1) a_t + \theta_0 \\
+(1 - (1 + \Phi_1)B^{12} + (\Phi_1 - \Phi_2)B^{24} + \Phi_2 B^{36} )Z_t =&amp; a_t  - \theta_1 a_{t-1} + \theta_0 \\
+\end{align}`
+
+Portanto,
+
+`\begin{align}
+Z_t &amp;= (1 + \Phi_1)Z_{t-12} - (\Phi_1 - \Phi_2)Z_{t-24} - \Phi_2 Z_{t-36} + a_t  - \theta_1 a_{t-1} + \theta_0.
+\end{align}`
+
+Equação de Previsão: 
+
+`$$\hat{Z}_{t+h} = (1 + \Phi_1) Z_{t-12+h} - (\Phi_1 - \Phi_2)Z_{t-24+h} - \Phi_2 Z_{t-36+h} + a_{t+1+h} - \theta_1 a_{t+h} + \theta_0.$$`
+
+---
+class: middle
+
+##Previsão dos modelos
+
+- Para `\(h = 1,\)` temos:
+
+`$$\hat{Z}_{t+1} = (1 + \Phi_1) Z_{t-11} - (\Phi_1 - \Phi_2)Z_{t-23} - \Phi_2 Z_{t-35} + a_{t+1} - \theta_1 a_t + \theta_0$$`
+- Como não temos informações a respeito de `\(a_{t+1}\)`, então reescrevemos a expressão anterior da seguinte maneira
+
+`$$\hat{Z}_{t+1} = (1 + \Phi_1) Z_{t-11} - (\Phi_1 - \Phi_2)Z_{t-23} - \Phi_2 Z_{t-35} - \theta_1 \hat{a}_t + \theta_0$$`
+em que `\(\hat{a}_t\)` é o resíduo.
+
+Para `\(h=2\)`, temos:
+
+`$$\hat{Z}_{t+1} = (1 + \Phi_1) Z_{t-11} - (\Phi_1 - \Phi_2)Z_{t-23} - \Phi_2 Z_{t-35}+ \theta_0$$`
+
+Para `\(h=13\)`, temos
+
+
+`$$\hat{Z}_{t+13} = (1 + \Phi_1) \hat{Z}_{t+1} - (\Phi_1 - \Phi_2)Z_{t-10} - \Phi_2 Z_{t-22} + \theta_0$$`
+
+- Métodos de previsão intervalar podem ser vistos em [Brockwell e Davis 2006](https://www.amazon.com/dp/3319298526/ref=cm_sw_su_dp?tag=otexts-20).
+
+
+---
+class: middle
+##Previsão dos modelos - Modelo Morettin (2004)
+
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-20-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Previsão dos modelos - Modelo `auto.arima()`
+
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-21-1.png)&lt;!-- --&gt;
+
+---
+class: middle, inverse, center
+##Erros de previsão e medidas de acurácia
+
+---
+class: middle
+##Erros de previsão [(Rob Hyndman)](https://otexts.com/fpp2/non-seasonal-arima.html)
+
+Um “erro” de previsão é a diferença entre um valor observado e sua previsão.
+
+`$$e_{t+h} = Z_{t+h} - \hat{Z}_{t+h}$$`
+Observe que os erros de previsão são diferentes dos resíduos de duas maneiras. Primeiro, os resíduos são calculados no conjunto de treinamento, enquanto os erros de previsão são calculados no conjunto de teste. 
+
+Podemos medir a precisão da previsão resumindo os erros de previsão 
+de diferentes maneiras.
+
+---
+class: middle
+##Medidas de Acurácia  [(Rob Hyndman)](https://otexts.com/fpp2/non-seasonal-arima.html)
+
+As duas medidas dependentes de escala mais comumente usadas são baseadas 
+nos erros absolutos ou erros quadrados:
+
+####Erro absoluto médio
+
+`$$\mbox{MAE} = \mbox{mean}(|e_t|)$$`
+
+####Raiz do erro quadrático médio
+
+`$$\mbox{RMSE} = \sqrt{\mbox{mean}(e_t^2)}$$`
+
+---
+class: middle
+##Medidas de Acurácia  [(Rob Hyndman)](https://otexts.com/fpp2/non-seasonal-arima.html)
+
+Os erros de porcentagem têm a vantagem de não possuírem unidades e, portanto, são freqüentemente usados para comparar desempenhos de previsão entre conjuntos de dados.
+
+
+
+####Erro Absoluto Médio Percentual
+
+`$$\mbox{MAPE} = \mbox{mean}\left(\frac{100e_t}{Z_t}\right)$$`
+
+####Erro Absoluto Médio Percentual Escalonado
+
+- Para comparar séries com diferentes unidades.
+
+`$$q_j = \frac{e_j}{\frac{1}{N-1}\sum_{t=2}^N|Z_t - Z_{t-1}|},$$`
+
+`$$\mbox{MASE} = mean(|q_j|).$$`
+
+---
+class: middle
+
+##Acurácia - Modelo `auto.arima()`
+
+
+```
+##                      ME     RMSE      MAE       MPE     MAPE      MASE
+## Training set  -1.026325 84.45559 57.47035      -Inf      Inf 0.7287129
+## Test set     -22.570544 71.88274 55.02801 -60.51769 95.88083 0.6977446
+##                     ACF1 Theil's U
+## Training set -0.01349221        NA
+## Test set     -0.22832765 0.4416177
+```
+
+##Acurácia - Modelo Morettin 
+
+
+```
+##                      ME     RMSE      MAE      MPE     MAPE      MASE
+## Training set  -0.815817 74.48829 50.91162      NaN      Inf 0.6455495
+## Test set     -15.507736 48.12034 38.13154 -310.786 321.3086 0.4835005
+##                     ACF1 Theil's U
+## Training set  0.00233649        NA
+## Test set     -0.23879893 0.9988904
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

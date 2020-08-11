@@ -1,0 +1,508 @@
+---
+title: "Estudo de Caso 1"
+subtitle: ""
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+    
+---
+class: middle
+##Introdução
+
+- Nessa aula, faremos alguns exercícios sobre séries sazonais.
+
+- Além disso, faremos uma complementação da teoria explicando como se faz previsão.
+
+---
+class: middle, inverse, center
+
+##Conjunto de dados 1: Lavras
+
+---
+class: middle
+##Conjunto de dados 1: Lavras
+
+ - Precipitação atmosférica em Lavras, MG.
+ 
+ - Observações mensais de janeiro de 1966 a dezembro de 1997.
+ 
+ - Vamos ajustar um modelo com os dados de janeiro de 1996 até dezembro de 1996.
+ 
+ - Faremos a previsão para os dados de janeiro de 1997 até dezembro de 1997.
+ 
+ - Vamos comparar essa previsão com os dados reais.
+
+
+---
+class: middle, inverse, center
+##Análise Exploratória da Série
+
+---
+class: middle
+##Gráfico da Série
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+##Carregando as bibliotecas
+library(tidyverse)
+library(forecast)
+library(httr)
+library(xlsx)
+library(ggfortify)
+library(ggpmisc)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+url1 = 'https://www.ime.usp.br/~pam/LAVRAS.XLS'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+
+lavras_teste = ts(dat$Precipitação, frequency = 12, start=c(1966,1))
+
+lavras = ts(dat$Precipitação, frequency = 12, start=c(1966,1), end=c(1996,12))
+
+lavras %>% autoplot() + theme_bw() + ggtitle("Precipitação Atmosférica em Lavras")
+
+```
+
+---
+class: middle
+##Gráfico Sazonal
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggseasonplot(lavras)+xlab("Meses")+ggtitle("Gráfico Sazonal: Lavras")+theme_bw()
+```
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série Original
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(lavras, lag.max=24)
+
+```
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série Original
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(lavras, lag.max=24)
+
+```
+
+
+---
+class: middle, inverse, center
+##Metodologia Box Jenkins
+
+---
+class: middle
+###Identificação: Autocorrelação - Série $(1 - B^{12})Z_t$
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(diff(lavras, differences=1,lag=12), lag.max=24)
+
+```
+
+---
+class: middle
+##Identificação:  Autocorrelação Parcial - Série $(1 - B^{12})Z_t$
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(diff(lavras, differences=1,lag=12), lag.max=24)
+
+```
+
+---
+class: middle
+##Identificação: Primeiro Modelo Proposto
+
+$$(1 - B^{12})Z_t = (1 - \Theta_1 B^{12})a_t + \theta_0.$$
+- Observe que esse modelo tem apenas uma diferença e um parâmetro de média móvel da parte sazonal. A parte não sazonal simplesmente ainda não foi modelada.
+
+- Os próximos passos estimar os parâmetros e fazer o diagnóstico do modelo.
+
+####Interpretação dos Parâmetros: Esse link tem um comentário [interessante](https://stats.stackexchange.com/questions/40905/arima-model-interpretation)
+
+---
+class: middle
+##Estimação: Primeiro Modelo Proposto
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+mod1 = Arima(lavras , order = c(0,0,0), seasonal = c(0,1,1), include.drift = TRUE)
+summary(mod1)
+```
+
+####Constantes nos modelos [ARIMA - software R](https://robjhyndman.com/hyndsight/arimaconstants/)
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação - Residuos do Primeiro Modelo Proposto
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(residuals(mod1), lag.max=24)
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial - Residuos do Primeiro Modelo Proposto
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(residuals(mod1), lag.max=24)
+
+```
+
+---
+class: middle
+##Identificação: Segundo Modelo Proposto
+
+$$(1-\phi_1B - \phi_9B^9 - \phi_{15}B^{15}) (1 - B^{12})Z_t = (1 - \Theta_1 B^{12})a_t + \theta_0.$$
+
+- Por meio de inspeção visual do intervalo de confiança das autocorrelações parciais, infere-se $\phi{11} \neq  0, \phi{99} \neq 0$ e $\phi{15 15} \neq  0$.
+
+- Assim, sugere-se adicionar um polinômio autoregressivo no modelo.
+
+---
+class: middle
+##Estimação: Segundo Modelo Proposto
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+mod2 = Arima(lavras , order = c(15,0,0), seasonal = c(0,1,1), include.drift = TRUE, fixed=c(NA,0,0,0,0,0,0,0,NA,0,0,0,0,0,NA,NA,NA),
+             transform.pars=TRUE)
+summary(mod2)
+```
+
+####Comentário Bryan [Ripley](https://stat.ethz.ch/pipermail/r-help/2004-January/044449.html) sobre colocar parâmetros fixos.
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação - Residuos do Segundo Modelo Proposto
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(residuals(mod2), lag.max=24)
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial - Residuos do Segundo Modelo Proposto
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(residuals(mod2), lag.max=24)
+
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod2, plot=FALSE, lag=24)
+
+```
+
+####Quantos lags devem ser usados ??
+
+- Em geral, basta utilizar as 10 ou 15 primeiras $\hat{r}_k$ (Morettin & Toloi, 2004).
+
+- O valor do total de lags é escolhido de uma certa forma, arbitrariamente, tipicamente, igual a 20. (Robert H. Shumway & David S. Stoffer, 2016)  
+
+
+---
+class: middle, inverse, center
+##Método Automático de Seleção de Modelos
+
+---
+####Algoritmo Hyndman-Khandakar implementado na função [`auto.arima()`](https://www.researchgate.net/publication/222105759_Automatic_Time_Series_Forecasting_The_forecast_Package_for_R)
+
+1.  O número de diferenças $0 \leq d \leq 2$ é determinada usando o teste KPSS.
+
+2.  Os valores de $p$ e $q$ são então escolhidos para minimizar o AICc após diferenciar os dados $d$ vezes.
+
+  a.  Para 4 modelos iniciais:
+      - $ARIMA(0,d,0)$ ou $SARIMA(0,d,0)(0,D,0)_s$
+      - $ARIMA(2,d,2)$ ou $SARIMA(2,d,2)(1,D,1)_s$
+      - $ARIMA(1,d,0)$ ou $SARIMA(1,d,0)(1,D,0)_s$
+      - $ARIMA(0,d,1)$ ou $SARIMA(0,d,1)(0,D,1)_s$
+     
+      Uma constante é incluída exceto se $d=2$. Se $d \leq 1$, um modelo adicional é incluído sem a constante.
+      
+  b.   O modelo com menor AICc é escolhido como "melhor modelo atual"
+  
+  c.   Variações no atual modelo são consideradas
+      - variar $p$ e/ou $q$ a partir do modelo atual $\pm 1$
+      - incluir ou excluir a constante do modelo
+      O modelo com menor AICc torna-se o "melhor modelo atual"
+      
+  d. Repete-se os passo 2 c até não encontrar modelo com menor AICc.
+  
+  
+---
+###Ajuste algoritmo `auto.arima()`
+
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+
+mod.auto =  auto.arima(lavras, trace=TRUE)
+  
+mod.auto
+
+```
+
+
+---
+###Ajuste algoritmo `auto.arima()`
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+
+mod.auto =  auto.arima(lavras, trace=FALSE)
+  
+mod.auto
+
+te = length(lavras)
+Z = lavras
+
+#ma1 = -0.11881964
+#sar1 = -0.70460294
+#sar2=-0.43057116
+#at = residuals(mod.auto)[length(residuals(mod.auto))]
+#Z = lavras
+#mu0 = 0.02557163 
+
+
+#forecastT = function(ma1,sar1,sar2,at,Z,te, mu0,h){
+#  X1 = (1+sar1)*Z[te-12+h]
+#  X2 = (sar1-sar2)*Z[te-24+h]
+#  X3 = sar2*Z[te-36+h]
+#  X4 = ifelse(h==1,ma1*at,0)
+#  X5 = mu0
+#  return(X1 - X2 - X3 + X4 + X5) 
+#}
+#forecastT(ma1,sar1,sar2,at,Z,te, mu0,h=1)
+#forecastT(ma1,sar1,sar2,at,Z,te, mu0,h=2)
+#forecastT(ma1,sar1,sar2,at,Z,te, mu0,h=3)
+
+#forecast(mod.auto)
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação - Residuos de `auto.arima()`
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(residuals(mod.auto),lag.max=24)
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação - Residuos de `auto.arima()`
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(residuals(mod.auto), lag.max=24)
+
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod.auto, plot=FALSE, lag=24)
+
+```     
+
+---
+class: middle, inverse, center
+##Previsão dos modelos
+
+
+---
+class: middle
+##Previsão dos modelos (Rob Hyndman)
+
+###Modelo [ARIMA](https://otexts.com/fpp2/arima-forecasting.html)
+
+- As previsões pontuais de um processo ARIMA  podem ser calculadas usando as três etapas a seguir.
+
+1.  Faça a expansão do modelo ARIMA tal que $Z_t$ esteja no lado esquerdo e todos os outros termos estejam no lado direito.
+
+2.  Rescreva a equação substituindo $t$ por $t+h$ em que $h$ é denominado horizonte de previsão.
+
+3.  No lado direito da equação, substitua as observações futuras por suas previsões, os erros futuros por zero e os erros passados pelos resíduos correspondentes.
+
+- Começando com $h=1$, essas etapas são repetidas para $h = 2,3, \ldots$ até todas previsões serem calculadas.
+
+**Obs: Pode-se calcular a previsão de um modelo sazonal multiplicativo de modo análogo**.
+
+
+---
+class: middle
+##Previsão dos modelos
+
+- Considerando que o modelo SARIMA de ordem $(p,d,q) \times (P, D, Q)_{s}$ é dado por: $\phi(B)\Phi(B^{12})\Delta^d\Delta^{D}_{12}Z_t = \theta(B)\Theta(B^{12})a_t.$
+
+- Supondo ainda que o modelo correto seja ARIMA(0,0,1)(2,1,0)[12] with drift, temos:
+
+\begin{align}
+(1 - \Phi_1 B^{12} - \Phi_2 B^{24})(1-B^{12})Z_t =& (1 - \theta_1 B)a_t + \theta_0 \\
+(1 - \Phi_1 B^{12} - \Phi_2 B^{24} - B^{12} + \Phi_1 B^{24} + \Phi_2 B^{36}) Z_t =& (1 - B \theta_1) a_t + \theta_0 \\
+(1 - (1 + \Phi_1)B^{12} + (\Phi_1 - \Phi_2)B^{24} + \Phi_2 B^{36} )Z_t =& a_t  - \theta_1 a_{t-1} + \theta_0 \\
+\end{align}
+
+Portanto,
+
+\begin{align}
+Z_t &= (1 + \Phi_1)Z_{t-12} - (\Phi_1 - \Phi_2)Z_{t-24} - \Phi_2 Z_{t-36} + a_t  - \theta_1 a_{t-1} + \theta_0.
+\end{align}
+
+Equação de Previsão: 
+
+$$\hat{Z}_{t+h} = (1 + \Phi_1) Z_{t-12+h} - (\Phi_1 - \Phi_2)Z_{t-24+h} - \Phi_2 Z_{t-36+h} + a_{t+1+h} - \theta_1 a_{t+h} + \theta_0.$$
+
+---
+class: middle
+
+##Previsão dos modelos
+
+- Para $h = 1,$ temos:
+
+$$\hat{Z}_{t+1} = (1 + \Phi_1) Z_{t-11} - (\Phi_1 - \Phi_2)Z_{t-23} - \Phi_2 Z_{t-35} + a_{t+1} - \theta_1 a_t + \theta_0$$
+- Como não temos informações a respeito de $a_{t+1}$, então reescrevemos a expressão anterior da seguinte maneira
+
+$$\hat{Z}_{t+1} = (1 + \Phi_1) Z_{t-11} - (\Phi_1 - \Phi_2)Z_{t-23} - \Phi_2 Z_{t-35} - \theta_1 \hat{a}_t + \theta_0$$
+em que $\hat{a}_t$ é o resíduo.
+
+Para $h=2$, temos:
+
+$$\hat{Z}_{t+1} = (1 + \Phi_1) Z_{t-11} - (\Phi_1 - \Phi_2)Z_{t-23} - \Phi_2 Z_{t-35}+ \theta_0$$
+
+Para $h=13$, temos
+
+
+$$\hat{Z}_{t+13} = (1 + \Phi_1) \hat{Z}_{t+1} - (\Phi_1 - \Phi_2)Z_{t-10} - \Phi_2 Z_{t-22} + \theta_0$$
+
+- Métodos de previsão intervalar podem ser vistos em [Brockwell e Davis 2006](https://www.amazon.com/dp/3319298526/ref=cm_sw_su_dp?tag=otexts-20).
+
+
+---
+class: middle
+##Previsão dos modelos - Modelo Morettin (2004)
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+forecast(mod2, h=13) %>% autoplot() 
+
+```
+
+
+---
+class: middle
+##Previsão dos modelos - Modelo `auto.arima()`
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+forecast(mod.auto, h=13) %>% autoplot() 
+
+```
+
+---
+class: middle, inverse, center
+##Erros de previsão e medidas de acurácia
+
+---
+class: middle
+##Erros de previsão [(Rob Hyndman)](https://otexts.com/fpp2/non-seasonal-arima.html)
+
+Um “erro” de previsão é a diferença entre um valor observado e sua previsão.
+
+$$e_{t+h} = Z_{t+h} - \hat{Z}_{t+h}$$
+Observe que os erros de previsão são diferentes dos resíduos de duas maneiras. Primeiro, os resíduos são calculados no conjunto de treinamento, enquanto os erros de previsão são calculados no conjunto de teste. 
+
+Podemos medir a precisão da previsão resumindo os erros de previsão 
+de diferentes maneiras.
+
+---
+class: middle
+##Medidas de Acurácia  [(Rob Hyndman)](https://otexts.com/fpp2/non-seasonal-arima.html)
+
+As duas medidas dependentes de escala mais comumente usadas são baseadas 
+nos erros absolutos ou erros quadrados:
+
+####Erro absoluto médio
+
+$$\mbox{MAE} = \mbox{mean}(|e_t|)$$
+
+####Raiz do erro quadrático médio
+
+$$\mbox{RMSE} = \sqrt{\mbox{mean}(e_t^2)}$$
+
+---
+class: middle
+##Medidas de Acurácia  [(Rob Hyndman)](https://otexts.com/fpp2/non-seasonal-arima.html)
+
+Os erros de porcentagem têm a vantagem de não possuírem unidades e, portanto, são freqüentemente usados para comparar desempenhos de previsão entre conjuntos de dados.
+
+
+
+####Erro Absoluto Médio Percentual
+
+$$\mbox{MAPE} = \mbox{mean}\left(\frac{100e_t}{Z_t}\right)$$
+
+####Erro Absoluto Médio Percentual Escalonado
+
+- Para comparar séries com diferentes unidades.
+
+$$q_j = \frac{e_j}{\frac{1}{N-1}\sum_{t=2}^N|Z_t - Z_{t-1}|},$$
+
+$$\mbox{MASE} = mean(|q_j|).$$
+
+---
+class: middle
+
+##Acurácia - Modelo `auto.arima()`
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+accuracy(forecast(mod.auto, h=12), lavras_teste)
+
+```
+
+##Acurácia - Modelo Morettin 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+accuracy(forecast(mod2, h=12), lavras_teste)
+
+```
