@@ -17,7 +17,7 @@ output:
 class: middle
 ##Introdução
 
-- Nessa aula, faremos alguns exercícios sobre modelos ARIMA e/ou SARIMA.
+- Nessa aula, faremos alguns exercícios sobre modelos ARIMA.
 
 - Nessa aula, usaremos dados simulados. A ideia é treinar a execução da Metodologia de Box-Jenkins. 
 
