@@ -1,0 +1,767 @@
+---
+title: "Estudo de Caso 2"
+subtitle: ""
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+    
+---
+class: middle
+##Introdução
+
+- Nessa aula, faremos alguns exercícios sobre modelos ARIMA e/ou SARIMA.
+
+- Nessa aula, usaremos dados simulados. A ideia é treinar a execução da Metodologia de Box-Jenkins. 
+
+- Esse site [aqui](https://people.duke.edu/~rnau/arimrule.htm) têm algumas regras práticas que podem ser úteis para ajustar os modelos.
+
+
+
+---
+class: middle inverse center
+
+##Modelo AR(2)
+
+
+---
+class: middle
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+##Carregando as bibliotecas
+library(tidyverse)
+library(forecast)
+library(httr)
+library(xlsx)
+library(ggfortify)
+library(ggpmisc)
+
+
+```
+
+###Modelo ARIMA(2,0,0) ou AR(2) 
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+#Semente
+set.seed(300)
+##Simulando um modelo ARIMA(2,0,0)
+ts.simAr2 <- arima.sim(list(ar = c(0.5, -0.4)), n = 2000,mean=0, sd=1)
+##Plotando a série
+ts.simAr2 %>% autoplot() + ggtitle("")
+```
+
+**Parâmetros usados**: $(0.5, -0.4)$
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série Original
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(ts.simAr2, lag.max=24)
+
+```
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série Original
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(ts.simAr2, lag.max=24)
+
+```
+
+---
+class: middle
+##Estimação dos Parâmetros Modelo Proposto ARIMA(2,0,0)
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+
+mod_ts.simAr2_ciclo1  = arima(ts.simAr2 , order = c(2,0,0), include.mean = FALSE)
+
+summary(mod_ts.simAr2_ciclo1 )
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(residuals(mod_ts.simAr2_ciclo1))
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(residuals(mod_ts.simAr2_ciclo1))
+
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod_ts.simAr2_ciclo1, plot=FALSE)
+
+```
+
+
+---
+class: middle inverse center
+
+##Modelo MA(2)
+
+
+---
+class: middle
+
+##Modelo MA(2)
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+#Semente
+set.seed(30)
+##Simulando um modelo ARIMA(0,0,2)
+ts.simMa2 <- arima.sim(list(order = c(0,0,2),ma = c(0.5, -0.4)), n = 2000, mean=0, sd=1)
+##Plotando a série
+ts.simMa2 %>% autoplot() + ggtitle("")
+```
+
+**Parâmetros usados**: $(0.5, -0.4)$
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série Original
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(ts.simMa2, lag.max=24)
+
+```
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série Original
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(ts.simMa2, lag.max=24)
+
+```
+
+---
+class: middle
+##Estimação dos Parâmetros: Modelo Proposto ARIMA(0,0,2)
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+
+mod_ts.simMa2_ciclo1  = arima(ts.simMa2 , order = c(0,0,2),include.mean = FALSE)
+
+summary(mod_ts.simMa2_ciclo1 )
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(residuals(mod_ts.simMa2_ciclo1))
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(residuals(mod_ts.simMa2_ciclo1))
+
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod_ts.simMa2_ciclo1, plot=FALSE)
+
+```
+
+
+---
+class: middle inverse center
+
+##Modelo ARIMA(2,1,0)
+
+
+---
+class: middle
+
+###Modelo ARIMA(2,1,0) 
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+#Semente
+set.seed(300)
+##Simulando um modelo ARIMA(2,1,0)
+ts.simArima210 <- arima.sim(list(order = c(2,1,0),ar = c(0.5, -0.4)), n = 2000,mean=0, sd=1)
+##Plotando a série
+ts.simArima210  %>% autoplot() + ggtitle("")
+```
+
+**Parâmetros usados**: $(0.5, -0.4)$
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série Original
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(ts.simArima210 , lag.max=24)
+
+```
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série Original
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(ts.simArima210 , lag.max=24)
+
+```
+
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série $(1 - B)Z_t$
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(diff(ts.simArima210, differences=1) , lag.max=24)
+
+```
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série $(1 - B)Z_t$
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(diff(ts.simArima210, differences=1) , lag.max=24)
+
+```
+
+---
+class: middle
+##Estimação dos Parâmetros: Modelo Proposto ARIMA(2,1,0)
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+
+mod_ts.simArima210_ciclo1  = arima(ts.simArima210 , order = c(2,1,0), include.mean = FALSE)
+
+summary(mod_ts.simArima210_ciclo1 )
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(residuals(mod_ts.simArima210_ciclo1))
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(residuals(mod_ts.simArima210_ciclo1))
+
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod_ts.simArima210_ciclo1, plot=FALSE)
+
+```
+
+
+---
+class: middle inverse center
+
+##Modelo ARIMA(0,1,2)
+
+
+---
+class: middle
+
+###Modelo ARIMA(0,1,2) 
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+#Semente
+set.seed(300)
+##Simulando um modelo ARIMA(0,1,2)
+ts.simArima012 <- arima.sim(list(order = c(0,1,2),ma = c(0.5, -0.4)), n = 2000,mean=0, sd=1)
+##Plotando a série
+ts.simArima012  %>% autoplot() + ggtitle("")
+```
+
+**Parâmetros usados**: $MA = (0.5, -0.4).$
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série Original
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(ts.simArima012 , lag.max=24)
+
+```
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série Original
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(ts.simArima012 , lag.max=24)
+
+```
+
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série $(1 - B)Z_t$
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(diff(ts.simArima012, differences=1) , lag.max=24)
+
+```
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série $(1 - B)Z_t$
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(diff(ts.simArima012, differences=1) , lag.max=24)
+
+```
+
+
+---
+class: middle
+##Estimação dos Parâmetros Modelo Proposto: ARIMA(0,1,2)
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+
+mod_ts.simArima012_ciclo1  = arima(ts.simArima012 , order = c(0,1,2), include.mean = FALSE)
+
+summary(mod_ts.simArima012_ciclo1 )
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(residuals(mod_ts.simArima012_ciclo1))
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(residuals(mod_ts.simArima012_ciclo1))
+
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod_ts.simArima012_ciclo1, plot=FALSE)
+
+```
+
+
+---
+class: middle, inverse, center
+
+##Modelo ARIMA(2,0,1) 
+
+
+---
+class: middle
+
+###Modelo ARIMA(2,0,1) 
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+#Semente
+set.seed(300)
+##Simulando um modelo ARIMA(2,0,1)
+ts.simArima201 <- arima.sim(list(order = c(2,0,1),ar = c(0.5, -0.4),ma=0.5), n = 2000,mean=0, sd=1)
+##Plotando a série
+ts.simArima201  %>% autoplot() + ggtitle("")
+```
+
+**Parâmetros usados**: $AR = (0.5, -0.4)$, $MA = 0.5$
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série Original
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(ts.simArima201 , lag.max=24)
+
+```
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série Original
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(ts.simArima201 , lag.max=24)
+
+```
+
+---
+class: middle
+##Comentários importantes:
+
+- Veremos que a fac é útil para identificar modelos MA, ao passo que que a facp é útil para identificar modelos AR.
+
+- Estas duas funções não são muito adequadas para identificar modelos ARMA.
+
+- Em um processo ARMA, a condição de estacionariedade é que as raízes do polinômio $\phi(B) = 0$ estejam fora do círculo unitário e a condição de invertibilidade é que as raízes de $\theta(B) = 0$  estejam fora do círculo unitário.
+
+---
+class: middle
+##Comentários importantes:
+
+
+- Os modelos ARMA (incluindo os termos AR e MA) têm ACFs e PACFs que terminam em 0. 
+
+- Esses são os mais complicados porque a ordem não será particularmente óbvia. 
+
+- Basicamente, você tem que adivinhar que um ou dois termos de cada tipo podem ser necessários e ver o que acontece quando você estima o modelo.
+
+- [Fonte:](https://www.stat.berkeley.edu/~arturof/Teaching/STAT248/lab07_part1.html)
+
+---
+class: middle
+##Comentários importantes:
+
+- É possível que um termo AR e um termo MA cancelem os efeitos um do outro. 
+- Então, se um modelo ARMA misto parece se ajustar aos dados, também tente um modelo com um termo AR a menos e um termo MA a menos.
+
+- Particularmente, se o as estimativas dos parâmetros no modelo original requerem mais de 10 iterações para convergir.
+
+- [Fonte:](https://people.duke.edu/~rnau/411arim3.htm)
+
+---
+class: middle
+##Comentários importantes:
+
+- Por esse motivo, os modelos ARIMA não podem ser identificados pela abordagem "backward stepwise" que inclui os termos AR e MA. 
+
+- Em outras palavras, você não pode começar incluindo vários termos de cada tipo e, em seguida, descartar aqueles cujos coeficientes estimados não são significativos. 
+
+- Em vez disso, você normalmente segue uma abordagem "progressiva", adicionando termos de um tipo ou de outro, conforme indicado pela aparência dos gráficos ACF e PACF.
+
+
+---
+class: middle
+##Estimação dos Parâmetros: Modelo Proposto ARIMA(1,0,0)
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+
+mod_ts.simArima100_ciclo1  = arima(ts.simArima201 , order = c(1,0,0), include.mean = FALSE)
+
+summary(mod_ts.simArima100_ciclo1 )
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(residuals(mod_ts.simArima100_ciclo1))
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(residuals(mod_ts.simArima100_ciclo1))
+
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod_ts.simArima100_ciclo1, plot=FALSE)
+
+```
+
+
+---
+class: middle
+##Estimação dos Parâmetros: Modelo Proposto ARIMA(0,0,1)
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+
+mod_ts.simArima001_ciclo2  = arima(ts.simArima201 , order = c(0,0,1), include.mean = FALSE)
+
+summary(mod_ts.simArima001_ciclo2 )
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(residuals(mod_ts.simArima001_ciclo2))
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(residuals(mod_ts.simArima001_ciclo2))
+
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod_ts.simArima001_ciclo2, plot=FALSE)
+
+```
+
+
+---
+class: middle
+##Estimação dos Parâmetros: Modelo Proposto ARIMA(1,0,1)
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+
+mod_ts.simArima101_ciclo3  = arima(ts.simArima201 , order = c(1,0,1), include.mean = FALSE)
+
+summary(mod_ts.simArima101_ciclo3 )
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(residuals(mod_ts.simArima101_ciclo3))
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(residuals(mod_ts.simArima101_ciclo3))
+
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod_ts.simArima101_ciclo3, plot=FALSE)
+
+```
+
+
+---
+class: middle
+##Estimação dos Parâmetros: Modelo Proposto ARIMA(1,0,2)
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+
+mod_ts.simArima102_ciclo4  = arima(ts.simArima201 , order = c(1,0,2), include.mean = FALSE)
+
+summary(mod_ts.simArima102_ciclo4 )
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(residuals(mod_ts.simArima102_ciclo4))
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(residuals(mod_ts.simArima102_ciclo4))
+
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod_ts.simArima102_ciclo4, plot=FALSE)
+
+```
+
+
+---
+class: middle
+##Estimação dos Parâmetros: Modelo Proposto ARIMA(2,0,1)
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+
+mod_ts.simArima201_ciclo4  = arima(ts.simArima201 , order = c(2,0,1), include.mean = FALSE)
+
+summary(mod_ts.simArima201_ciclo4 )
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(residuals(mod_ts.simArima201_ciclo4))
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(residuals(mod_ts.simArima201_ciclo4))
+
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod_ts.simArima201_ciclo4, plot=FALSE)
+
+```
+
+---
+class: middle
+
+##Modelos Automático de Seleção
+
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+
+mod_auto  = auto.arima(ts.simArima201,seasonal=FALSE)
+
+mod_auto 
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod_auto , plot=FALSE)
+
+```
+
+
+
+
+
+
+
+

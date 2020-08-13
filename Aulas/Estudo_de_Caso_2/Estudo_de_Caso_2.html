@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Estudo de Caso 2</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Estudo de Caso 2
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-08-12)
+
+---
+
+class: middle
+##Introdução
+
+- Nessa aula, faremos alguns exercícios sobre modelos ARIMA e/ou SARIMA.
+
+- Nessa aula, usaremos dados simulados. A ideia é treinar a execução da Metodologia de Box-Jenkins. 
+
+- Esse site [aqui](https://people.duke.edu/~rnau/arimrule.htm) têm algumas regras práticas que podem ser úteis para ajustar os modelos.
+
+
+
+---
+class: middle inverse center
+
+##Modelo AR(2)
+
+
+---
+class: middle
+
+
+
+###Modelo ARIMA(2,0,0) ou AR(2) 
+
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+**Parâmetros usados**: `\((0.5, -0.4)\)`
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série Original
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série Original
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Estimação dos Parâmetros Modelo Proposto ARIMA(2,0,0)
+
+
+```
+## 
+## Call:
+## arima(x = ts.simAr2, order = c(2, 0, 0), include.mean = FALSE)
+## 
+## Coefficients:
+##          ar1      ar2
+##       0.5250  -0.4075
+## s.e.  0.0204   0.0204
+## 
+## sigma^2 estimated as 1.04:  log likelihood = -2877.82,  aic = 5761.64
+## 
+## Training set error measures:
+##                      ME     RMSE       MAE       MPE     MAPE      MASE
+## Training set 0.05306411 1.020041 0.8196873 -262.3327 568.3597 0.7605534
+##                     ACF1
+## Training set 0.007140412
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(2,0,0) with zero mean
+## Q* = 4.2849, df = 8, p-value = 0.8306
+## 
+## Model df: 2.   Total lags used: 10
+```
+
+
+---
+class: middle inverse center
+
+##Modelo MA(2)
+
+
+---
+class: middle
+
+##Modelo MA(2)
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-9-1.png)&lt;!-- --&gt;
+
+**Parâmetros usados**: `\((0.5, -0.4)\)`
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série Original
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série Original
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Estimação dos Parâmetros: Modelo Proposto ARIMA(0,0,2)
+
+
+```
+## 
+## Call:
+## arima(x = ts.simMa2, order = c(0, 0, 2), include.mean = FALSE)
+## 
+## Coefficients:
+##          ma1      ma2
+##       0.4939  -0.4046
+## s.e.  0.0206   0.0205
+## 
+## sigma^2 estimated as 1.07:  log likelihood = -2906,  aic = 5817.99
+## 
+## Training set error measures:
+##                       ME     RMSE      MAE     MPE     MAPE      MASE
+## Training set -0.01442511 1.034252 0.825698 131.436 261.3224 0.6697932
+##                      ACF1
+## Training set -0.001361388
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(0,0,2) with zero mean
+## Q* = 14.386, df = 8, p-value = 0.07225
+## 
+## Model df: 2.   Total lags used: 10
+```
+
+
+---
+class: middle inverse center
+
+##Modelo ARIMA(2,1,0)
+
+
+---
+class: middle
+
+###Modelo ARIMA(2,1,0) 
+
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
+
+**Parâmetros usados**: `\((0.5, -0.4)\)`
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série Original
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série Original
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série `\((1 - B)Z_t\)`
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série `\((1 - B)Z_t\)`
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-20-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Estimação dos Parâmetros: Modelo Proposto ARIMA(2,1,0)
+
+
+```
+## 
+## Call:
+## arima(x = ts.simArima210, order = c(2, 1, 0), include.mean = FALSE)
+## 
+## Coefficients:
+##          ar1      ar2
+##       0.5250  -0.4075
+## s.e.  0.0204   0.0204
+## 
+## sigma^2 estimated as 1.04:  log likelihood = -2877.82,  aic = 5761.64
+## 
+## Training set error measures:
+##                      ME     RMSE       MAE       MPE     MAPE      MASE
+## Training set 0.05303759 1.019786 0.8192776 0.2056692 4.634784 0.8487143
+##                     ACF1
+## Training set 0.007106675
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-22-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-23-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(2,1,0)
+## Q* = 4.2881, df = 8, p-value = 0.8302
+## 
+## Model df: 2.   Total lags used: 10
+```
+
+
+---
+class: middle inverse center
+
+##Modelo ARIMA(0,1,2)
+
+
+---
+class: middle
+
+###Modelo ARIMA(0,1,2) 
+
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-25-1.png)&lt;!-- --&gt;
+
+**Parâmetros usados**: `\(MA = (0.5, -0.4).\)`
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série Original
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-26-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série Original
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-27-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série `\((1 - B)Z_t\)`
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-28-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série `\((1 - B)Z_t\)`
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-29-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Estimação dos Parâmetros Modelo Proposto: ARIMA(0,1,2)
+
+
+```
+## 
+## Call:
+## arima(x = ts.simArima012, order = c(0, 1, 2), include.mean = FALSE)
+## 
+## Coefficients:
+##          ma1      ma2
+##       0.5350  -0.3726
+## s.e.  0.0208   0.0209
+## 
+## sigma^2 estimated as 1.041:  log likelihood = -2879.06,  aic = 5764.13
+## 
+## Training set error measures:
+##                      ME     RMSE       MAE       MPE     MAPE      MASE
+## Training set 0.05342077 1.020144 0.8183582 0.2103024 2.309767 0.8372324
+##                      ACF1
+## Training set -0.001455075
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-31-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-32-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(0,1,2)
+## Q* = 3.4248, df = 8, p-value = 0.9049
+## 
+## Model df: 2.   Total lags used: 10
+```
+
+
+---
+class: middle, inverse, center
+
+##Modelo ARIMA(2,0,1) 
+
+
+---
+class: middle
+
+###Modelo ARIMA(2,0,1) 
+
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-34-1.png)&lt;!-- --&gt;
+
+**Parâmetros usados**: `\(AR = (0.5, -0.4)\)`, `\(MA = 0.5\)`
+
+---
+class: middle
+##Gráfico de Autocorrelação - Série Original
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-35-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série Original
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-36-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Comentários importantes:
+
+- Veremos que a fac é útil para identificar modelos MA, ao passo que que a facp é útil para identificar modelos AR.
+
+- Estas duas funções não são muito adequadas para identificar modelos ARMA.
+
+- Em um processo ARMA, a condição de estacionariedade é que as raízes do polinômio `\(\phi(B) = 0\)` estejam fora do círculo unitário e a condição de invertibilidade é que as raízes de `\(\theta(B) = 0\)`  estejam fora do círculo unitário.
+
+---
+class: middle
+##Comentários importantes:
+
+
+- Os modelos ARMA (incluindo os termos AR e MA) têm ACFs e PACFs que terminam em 0. 
+
+- Esses são os mais complicados porque a ordem não será particularmente óbvia. 
+
+- Basicamente, você tem que adivinhar que um ou dois termos de cada tipo podem ser necessários e ver o que acontece quando você estima o modelo.
+
+- [Fonte:](https://www.stat.berkeley.edu/~arturof/Teaching/STAT248/lab07_part1.html)
+
+---
+class: middle
+##Comentários importantes:
+
+- É possível que um termo AR e um termo MA cancelem os efeitos um do outro. 
+- Então, se um modelo ARMA misto parece se ajustar aos dados, também tente um modelo com um termo AR a menos e um termo MA a menos.
+
+- Particularmente, se o as estimativas dos parâmetros no modelo original requerem mais de 10 iterações para convergir.
+
+- [Fonte:](https://people.duke.edu/~rnau/411arim3.htm)
+
+---
+class: middle
+##Comentários importantes:
+
+- Por esse motivo, os modelos ARIMA não podem ser identificados pela abordagem "backward stepwise" que inclui os termos AR e MA. 
+
+- Em outras palavras, você não pode começar incluindo vários termos de cada tipo e, em seguida, descartar aqueles cujos coeficientes estimados não são significativos. 
+
+- Em vez disso, você normalmente segue uma abordagem "progressiva", adicionando termos de um tipo ou de outro, conforme indicado pela aparência dos gráficos ACF e PACF.
+
+
+---
+class: middle
+##Estimação dos Parâmetros: Modelo Proposto ARIMA(1,0,0)
+
+
+```
+## 
+## Call:
+## arima(x = ts.simArima201, order = c(1, 0, 0), include.mean = FALSE)
+## 
+## Coefficients:
+##          ar1
+##       0.5304
+## s.e.  0.0189
+## 
+## sigma^2 estimated as 1.689:  log likelihood = -3362.47,  aic = 6728.93
+## 
+## Training set error measures:
+##                      ME     RMSE      MAE     MPE     MAPE     MASE      ACF1
+## Training set 0.04264766 1.299803 1.032183 43.1115 289.7916 0.876515 0.2976394
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-38-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-39-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(1,0,0) with zero mean
+## Q* = 789.27, df = 9, p-value &lt; 2.2e-16
+## 
+## Model df: 1.   Total lags used: 10
+```
+
+
+---
+class: middle
+##Estimação dos Parâmetros: Modelo Proposto ARIMA(0,0,1)
+
+
+```
+## 
+## Call:
+## arima(x = ts.simArima201, order = c(0, 0, 1), include.mean = FALSE)
+## 
+## Coefficients:
+##          ma1
+##       0.8115
+## s.e.  0.0104
+## 
+## sigma^2 estimated as 1.204:  log likelihood = -3023.96,  aic = 6051.92
+## 
+## Training set error measures:
+##                     ME     RMSE       MAE      MPE     MAPE      MASE      ACF1
+## Training set 0.0496823 1.097213 0.8745443 90.17506 219.5363 0.7426507 0.1795409
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-42-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-43-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(0,0,1) with zero mean
+## Q* = 275, df = 9, p-value &lt; 2.2e-16
+## 
+## Model df: 1.   Total lags used: 10
+```
+
+
+---
+class: middle
+##Estimação dos Parâmetros: Modelo Proposto ARIMA(1,0,1)
+
+
+```
+## 
+## Call:
+## arima(x = ts.simArima201, order = c(1, 0, 1), include.mean = FALSE)
+## 
+## Coefficients:
+##          ar1     ma1
+##       0.2477  0.7437
+## s.e.  0.0245  0.0144
+## 
+## sigma^2 estimated as 1.148:  log likelihood = -2976.76,  aic = 5959.52
+## 
+## Training set error measures:
+##                      ME     RMSE       MAE      MPE     MAPE      MASE
+## Training set 0.03899543 1.071586 0.8503975 66.07171 238.5858 0.7221455
+##                    ACF1
+## Training set 0.05379662
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-46-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-47-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(1,0,1) with zero mean
+## Q* = 218.78, df = 8, p-value &lt; 2.2e-16
+## 
+## Model df: 2.   Total lags used: 10
+```
+
+
+---
+class: middle
+##Estimação dos Parâmetros: Modelo Proposto ARIMA(1,0,2)
+
+
+```
+## 
+## Call:
+## arima(x = ts.simArima201, order = c(1, 0, 2), include.mean = FALSE)
+## 
+## Coefficients:
+##           ar1     ma1     ma2
+##       -0.1588  1.2288  0.4560
+## s.e.   0.0498  0.0425  0.0347
+## 
+## sigma^2 estimated as 1.093:  log likelihood = -2927.51,  aic = 5863.02
+## 
+## Training set error measures:
+##                     ME     RMSE       MAE      MPE     MAPE      MASE
+## Training set 0.0389828 1.045488 0.8301138 32.10268 272.7498 0.7049209
+##                     ACF1
+## Training set -0.01498495
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-50-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-51-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(1,0,2) with zero mean
+## Q* = 107.85, df = 7, p-value &lt; 2.2e-16
+## 
+## Model df: 3.   Total lags used: 10
+```
+
+
+---
+class: middle
+##Estimação dos Parâmetros: Modelo Proposto ARIMA(2,0,1)
+
+
+```
+## 
+## Call:
+## arima(x = ts.simArima201, order = c(2, 0, 1), include.mean = FALSE)
+## 
+## Coefficients:
+##          ar1      ar2     ma1
+##       0.5114  -0.3971  0.5190
+## s.e.  0.0287   0.0254  0.0275
+## 
+## sigma^2 estimated as 1.04:  log likelihood = -2877.63,  aic = 5763.27
+## 
+## Training set error measures:
+##                      ME     RMSE       MAE      MPE     MAPE      MASE
+## Training set 0.05238224 1.019712 0.8189929 64.97778 229.2724 0.6954772
+##                     ACF1
+## Training set 0.002035879
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-54-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+![](Estudo_de_Caso_2_files/figure-html/unnamed-chunk-55-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(2,0,1) with zero mean
+## Q* = 3.9682, df = 7, p-value = 0.7834
+## 
+## Model df: 3.   Total lags used: 10
+```
+
+---
+class: middle
+
+##Modelos Automático de Seleção
+
+
+
+```
+## Series: ts.simArima201 
+## ARIMA(2,0,1) with non-zero mean 
+## 
+## Coefficients:
+##          ar1      ar2     ma1    mean
+##       0.5111  -0.3997  0.5172  0.0904
+## s.e.  0.0287   0.0254  0.0276  0.0389
+## 
+## sigma^2 estimated as 1.039:  log likelihood=-2874.94
+## AIC=5759.89   AICc=5759.92   BIC=5787.89
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(2,0,1) with non-zero mean
+## Q* = 3.9512, df = 6, p-value = 0.6833
+## 
+## Model df: 4.   Total lags used: 10
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
