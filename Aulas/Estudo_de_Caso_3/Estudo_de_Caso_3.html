@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Estudo de caso - espaço de estados</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Estudo de caso - espaço de estados
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-08-21)
+
+---
+
+class: middle
+#Introdução
+
+
+
+- Nessa aula serão feitas algumas análises estatísticas com modelo de espaço de estados.
+
+
+###Representação em espaço de estados
+
+
+`\begin{align}
+Z_t   =&amp; \mathbf{A}_t \mathbf{X}_t + \nu_t \phantom{111} \mbox{(equação de observação)}\\
+\mathbf{X}_{t}  =&amp; \mathbf{G}_t \mathbf{X}_{t-1}  + \mathbf{w}_t, \phantom{11} t = 1, \ldots, N.  \phantom{111} \mbox{(equação de estado)}
+\end{align}`
+
+---
+class: middle
+####Modelo de Nível Local (MNL)
+
+
+`\begin{align}
+Z_t =&amp; \mu_t + \epsilon_t, \phantom{111} t = 1, \ldots, N, \\
+\mu_t =&amp; \mu_{t-1} + \eta_t, \phantom{111} t = 1, \ldots, N.
+\end{align}`
+em que `\(\epsilon_t \sim N(0,\sigma_{\epsilon}^2)\)` e `\(\eta_t \sim N(0, \sigma^2_{\eta})\)`.
+
+
+####Modelo de Tendência Local
+
+
+`\begin{align}
+Z_t   =&amp; \mu_t + \epsilon_t \\
+\mu_t =&amp; \mu_{t-1} + \beta_{t-1} + \eta_t \\
+\beta_t =&amp; \beta_{t-1} + \xi_t.
+\end{align}`
+em que `\(\epsilon_t \sim N(0,\sigma^2_{\epsilon})\)`, 
+`\(\eta_t \sim N(0,\sigma^2_{\eta})\)` e `\(\xi_t \sim N(0,\sigma^2_{\xi}).\)`
+
+
+####Modelo Estrutural Básico
+
+`\begin{align}
+Z_t   =&amp; \mu_t + S_t + \epsilon_t \\
+\mu_t =&amp; \mu_{t-1} + \beta_{t-1} + \eta_t \\
+\beta_t =&amp; \beta_{t-1} + \xi_t. \\
+a_t =&amp; S_t + S_{t-1} + \ldots + S_{t-s+1}.
+\end{align}`
+em que `\(\epsilon_t \sim N(0,\sigma_{\epsilon}^2)\)`, `\(\eta_t \sim N(0, \sigma^2_{\eta})\)` e `\(a_t \sim N(0, \sigma^2_{a})\)` .
+
+
+
+---
+class: middle
+##Modelos de Espaço de Estados - Software R
+
+- Inicialmente, vamos usar a função `StructTS` da biblioteca `stats` do software R. Essa biblioteca já é pré-instalada quando se intala o R base.
+
+- Com o uso dessa biblioteca, pode-se ajustar três tipos de modelos:
+
+- O modelo de nível local (`type = level`).
+
+- O modelo de tendência local linear (`type  = trend`).
+
+- O modelo Estrutural Básico (`type  = BSM`).
+
+
+---
+class: middle
+#Conjunto de dados  
+
+ -  A primeira série temporal a ser analisada é a série `\(A_8\)` (Bebidas).
+ 
+ -  M-Bebida - Produção Física Industrial - Alimentação e Bebidas elaboradas para Indústria (base média de 1991 = 100), observações mensais de janeiro de 1985 a julho de 2000.
+ 
+ - Vamos usar como amostra de treinamento valores mensais janeiro de 1985 até dezembro de 1999.
+ 
+ - E vamos usar como amostra teste valores mensais de janeiro de 2000 até julho de 2000.
+
+
+
+
+---
+class: middle
+###Conjunto de dados 1 - Gráfico da série
+
+![](Estudo_de_Caso_3_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+###Conjunto de dados 1 - Gráfico de sub séries por ano
+
+![](Estudo_de_Caso_3_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Modelos Ajustado - Modelo Estrutural Básico
+
+`\begin{align}
+Z_t   =&amp; \mu_t + S_t + \epsilon_t \\
+\mu_t =&amp; \mu_{t-1} + \beta_{t-1} + \eta_t \\
+\beta_t =&amp; \beta_{t-1} + \xi_t. \\
+a_t =&amp; S_t + S_{t-1} + \ldots + S_{t-s+1}.
+\end{align}`
+com `\(s=12.\)`
+
+####Representação em Modelos de Espaço de Estados
+
+`\begin{align}
+Z_t   =&amp; \left[ \begin{matrix} 1 &amp; 0 &amp; 1 &amp; \ldots &amp; 0 \end{matrix}\right] \mathbf{X}_t + \epsilon_t.\\
+\mathbf{X}_t =&amp; 
+  \left[\begin{matrix}
+         \mu_t \\
+         \beta_t \\
+         S_t \\
+         S_{t-1} \\
+         S_{t-2} \\
+         \vdots \\
+         S_{t-s+2}
+         \end{matrix}\right].
+         =
+  \left[\begin{matrix}
+         1 &amp; 1 &amp; 0 &amp; 0 &amp; 0 &amp; \ldots &amp; 0 \\
+         0 &amp; 1 &amp; 0 &amp; 0 &amp; 0 &amp;\ldots &amp; 0 \\
+         0 &amp; 0 &amp; -1 &amp;-1 &amp; -1 &amp; \ldots &amp; -1\\
+         0 &amp; 0 &amp; 1 &amp;  0 &amp; 0 &amp; \ldots &amp; 0 \\
+         0 &amp; 0 &amp; 0 &amp; 1 &amp;  0 &amp; \ldots &amp; 0 \\
+         \vdots &amp;0  &amp; \vdots &amp; \vdots &amp; \ddots  &amp; \ldots &amp; 0  \\
+         0 &amp; 0  &amp; 0 &amp; 0 &amp; \ldots &amp; 1 &amp; 0
+         \end{matrix}\right]
+\left[\begin{matrix}
+       \mu_{t-1} \\
+       \beta_{t-1} \\
+       S_{t-1} \\
+       S_{t-2} \\
+       S_{t-3} \\
+       \vdots \\
+       S_{t-s+1}
+       \end{matrix}\right] +
+  \left[\begin{matrix}
+         \eta_{t} \\
+         \xi_{t} \\
+         a_{t} \\
+         0 \\
+         0 \\
+         \vdots \\
+         0
+         \end{matrix}\right].
+\end{align}`
+
+
+---
+class: middle
+##Modelos de Espaço de Estados
+
+
+####Estimativas dos parâmetros de Variâncias
+
+
+```
+##     level     slope      seas   epsilon 
+## 15.479501  0.000000  3.436125 19.327958
+```
+
+
+---
+class: middle
+##Modelos de Espaço de Estados
+
+![](Estudo_de_Caso_3_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+
+
+---
+class: middle
+##Modelos de Espaço de Estados
+
+
+```
+##                       ME       RMSE        MAE         MPE       MAPE
+## Training set  0.06669131  0.9972151  0.7531401  0.01661949  0.8424814
+## Test set     -7.98506865 12.6560858 11.7137730 -8.37216116 11.2018483
+##                    MASE        ACF1 Theil's U
+## Training set 0.07312294  0.08872566        NA
+## Test set     1.13729895 -0.20445255 0.5883806
+```
+
+
+---
+class: middle
+
+##Previsão dos Modelos
+
+![](Estudo_de_Caso_3_files/figure-html/unnamed-chunk-8-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Modelos de Espaço de Estados - Software R
+
+
+###Pacote dlm
+
+| Parâmetros do Modelo                |   Nome na lista             |
+| --------------------------| -----------------------|
+| `\(A_t\)`       |  FF |    
+| `\(R\)`  |  V |
+| `\(G_t\)`                |  G             |
+| `\(Q\)`   | W |    
+
+
+---
+class: middle
+##Modelos de Espaço de Estados - Software R
+
+###Pacote dlm
+
+| Função                |  Modelo                    |
+| --------------------------| -----------------------|
+| `dlm`         | DLM genérico |    
+| `dlmModARMA`  | Processo ARMA |
+| `dlmModPoly`  | DLM com Polinômio de enésima ordem |
+| `dlmModReg`   | Regressão Linear |    
+| `dlmModSeas`  | Fatores Sazonais e/ou Periódico  |
+| `dlmModTrig`  | Forma Trigonométrica, Periódica  |
+
+
+---
+class: middle
+##Modelos de Espaço de Estados - Software R
+
+###Pacote dlm
+
+| Função                |  Modelo                    |
+| --------------------------| -----------------------|
+| `dlmFilter`         | Filtro de Kalman|    
+| `dlmSmooth`  | Suavizador de Kalman |
+| `dlmForecast`  | Previsão|
+| `dlmLL`   | Função de Verossimilhança|    
+| `dlmMLE`  | Estimação de Máxima Verossimilhança  |
+
+
+---
+class: middle
+####Ajuste do Modelo Estrutural Básico usando a biblioteca `dlm`
+
+
+```r
+#Dados
+y = bebidas
+
+#Tendencia linear local+ sazonalidade    
+dlmBebidas = dlmModPoly() + dlmModSeas(12)
+
+#Funcao para ser otimizada
+bsmBebidas = function(x) {
+      V(dlmBebidas) = exp(x[1])
+      diag(W(dlmBebidas))[1:3] = exp(x[2:4])
+      return(dlmBebidas)
+}
+
+#Estimador de Maxima Verossimilhanca
+fitBebidas = dlmMLE(y,parm=c(0,0,0, 0),build=bsmBebidas) 
+dlmBebidas = bsmBebidas(fitBebidas$par)
+
+#Estimativas de Maxima Verossimilhança
+mle.est = round(exp(fitBebidas$par),3)
+names(mle.est) = c("epsilon","level","slope","seas" )
+mle.est
+```
+
+[Fonte do codigo:](https://robjhyndman.com/talks/ABS3.pdf.)
+
+---
+class: middle
+####Ajuste do Modelo Estrutural Básico usando a biblioteca `dlm`
+
+
+```
+## epsilon   level   slope    seas 
+##  23.602  12.348   0.000   1.742
+```
+
+
+
+
+
+
+
+
+
+
+
+---
+class: middle
+##Suavizador de Kalman
+
+
+```r
+ySmooth = dlmSmooth(y, mod = dlmBebidas)
+x = cbind(y, dropFirst(ySmooth$s[, c(1, 3)])) 
+colnames(x) = c("Bebidas", "Tendência", "Sazonalidade")
+plot(x, type = "o", main = "Bebidas")
+```
+
+[Fonte sobre Suavizador de Kalman 1](https://communities.sas.com/t5/SAS-Communities-Library/Kalman-Filtering-and-Kalman-Smoothing-in-PROC-UCM/ta-p/338797#:~:text=Kalman%20filtering%20uses%20all%20the,and%20uses%20all%20the%20data.&amp;text=The%20smoothing%20gives%20a%20good,matrix%20of%20the%20state%20variables.) [Fonte sobre Suavizador de Kalman 2](https://christophertonetti.com/files/notes/Nakata_Tonetti_KalmanFilterAndSmoother.pdf.) 
+
+
+---
+class: middle
+### Suavizador de Kalman
+
+![](Estudo_de_Caso_3_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+
+
+
+---
+class: middle
+##Previsão de um modelo de espaço de estado
+
+
+
+```r
+Filt &lt;- dlmFilter(y, mod = dlmBebidas)
+Fore &lt;- dlmForecast(Filt, nAhead = 7)
+
+novos_dados = c(y,Fore$f)
+
+idx=c(1:length(novos_dados))
+
+plot(idx,novos_dados, ylab="",xlab="Tempo", main="Bebidas",col=ifelse(idx&lt;=180,"black","red"),type="o",pch=16)
+```
+
+---
+class: middle
+##Previsão de um modelo de espaço de estado
+
+
+![](Estudo_de_Caso_3_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+
+###EQM
+
+
+```
+## [1] 160.8634
+```
+
+###MAE
+
+
+```
+## [1] 11.63575
+```
+
+###MAPE 
+
+
+```
+## [1] 0.1110811
+```
+
+
+
+
+---
+class: middle
+###Modelos Alternativo 
+
+`\begin{align}
+Z_t   =&amp; \mu_t + S_t + \epsilon_t \\
+\mu_t =&amp; \mu_{t-1} + \eta_t \\
+a_t =&amp; S_t + S_{t-1} + \ldots + S_{t-s+1}.
+\end{align}`
+com `\(s=12.\)`
+
+####Representação em Modelos de Espaço de Estados
+
+`\begin{align}
+Z_t   =&amp; \left[ \begin{matrix} 1 &amp;  1 &amp; \ldots &amp; 0 \end{matrix}\right] \mathbf{X}_t + \epsilon_t.\\
+\mathbf{X}_t =&amp; 
+  \left[\begin{matrix}
+         \mu_t \\
+         S_t \\
+         S_{t-1} \\
+         S_{t-2} \\
+         \vdots \\
+         S_{t-s+2}
+         \end{matrix}\right].
+         =
+  \left[\begin{matrix}
+         1 &amp; 0 &amp; 0 &amp; 0 &amp; \ldots &amp; 0 \\
+         0 &amp; -1 &amp;-1 &amp; -1 &amp; \ldots &amp; -1\\
+         0 &amp; 1 &amp;  0 &amp; 0 &amp; \ldots &amp; 0 \\
+         0  &amp; 0 &amp; 1 &amp;  0 &amp; \ldots &amp; 0 \\
+         \vdots   &amp; \vdots &amp; \vdots &amp; \ddots  &amp; \ldots &amp; 0  \\
+         0   &amp; 0 &amp; 0 &amp; \ldots &amp; 1 &amp; 0
+         \end{matrix}\right]
+\left[\begin{matrix}
+       \mu_{t-1} \\
+       S_{t-1} \\
+       S_{t-2} \\
+       S_{t-3} \\
+       \vdots \\
+       S_{t-s+1}
+       \end{matrix}\right] +
+  \left[\begin{matrix}
+         \eta_{t} \\
+         a_{t} \\
+         0 \\
+         0 \\
+         \vdots \\
+         0
+         \end{matrix}\right].
+\end{align}`
+
+
+---
+class: middle
+###Modelos Alternativo 
+
+
+
+```r
+dlm3 = dlmModPoly(order=1) + dlmModSeas(12)
+
+    buildFun = function(x) {
+      diag(W(dlm3))[1:2] = exp(x[1:2])
+      V(dlm3) = exp(x[3])
+      return(dlm3)
+}
+fit3 = dlmMLE(y,parm=c(0.1,0.1,0.1),build=buildFun)
+dlm3 = buildFun(fit3$par)
+
+
+ySmooth = dlmSmooth(y, mod = dlm3)
+x = cbind(y, dropFirst(ySmooth$s[, c(1, 3)])) 
+colnames(x) = c("Bebidas", "Tendencias", "Sazonalidade")
+plot(x, type = "o", main = "Bebidas")
+```
+
+---
+class: middle
+###Modelos Alternativo 
+
+
+![](Estudo_de_Caso_3_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+###Modelos Alternativo 
+
+![](Estudo_de_Caso_3_files/figure-html/unnamed-chunk-20-1.png)&lt;!-- --&gt;
+
+
+
+
+---
+class: middle
+###Modelos Alternativo 
+
+
+###EQM
+
+
+```
+## [1] 137.8301
+```
+
+###MAE
+
+
+```
+## [1] 10.88252
+```
+
+###MAPE 
+
+
+```
+## [1] 0.1028581
+```
+
+
+---
+class: middle, inverse, center
+
+##Comparação com os modelos ARIMA
+
+
+---
+class: middle
+
+##Modelo ARIMA 1
+
+`$$(1 -\phi_1 B - \ldots - \phi_{10} B^{10})(1 - B^{12})(1 - B)Z_t =
+(1 - \theta B)(1 - \Theta_1 B^{12})a_t.$$`
+
+
+
+```r
+modArima = Arima(bebidas , order = c(10,0,0), seasonal = c(0,1,1), include.drift = TRUE)
+summary(modArima)
+```
+
+
+---
+class: middle
+
+
+```
+## Series: bebidas 
+## ARIMA(10,0,0)(0,1,1)[12] with drift 
+## 
+## Coefficients:
+##          ar1     ar2     ar3     ar4     ar5      ar6      ar7      ar8     ar9
+##       0.4148  0.1346  0.2495  0.0512  0.0479  -0.0273  -0.1155  -0.0615  0.1245
+## s.e.  0.0768  0.0871  0.0833  0.0845  0.0843   0.0869   0.0851   0.0846  0.0850
+##          ar10     sma1   drift
+##       -0.1030  -0.7343  0.3259
+## s.e.   0.0794   0.0765  0.0572
+## 
+## sigma^2 estimated as 61.9:  log likelihood=-583.99
+## AIC=1193.97   AICc=1196.34   BIC=1234.58
+## 
+## Training set error measures:
+##                     ME     RMSE      MAE        MPE     MAPE    MASE       ACF1
+## Training set 0.1409923 7.324196 5.370852 -0.2931622 5.762038 0.52146 0.01487367
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+![](Estudo_de_Caso_3_files/figure-html/unnamed-chunk-26-1.png)&lt;!-- --&gt;
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(10,0,0)(0,1,1)[12] with drift
+## Q* = 16.592, df = 12, p-value = 0.1656
+## 
+## Model df: 12.   Total lags used: 24
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(10,0,0)(0,1,1)[12] with drift
+## Q* = 16.592, df = 12, p-value = 0.1656
+## 
+## Model df: 12.   Total lags used: 24
+```
+
+---
+class: middle
+##Acurácia - Modelo ARIMA 1
+
+
+```
+##                       ME      RMSE       MAE         MPE      MAPE     MASE
+## Training set   0.1409923  7.324196  5.370852  -0.2931622  5.762038 0.521460
+## Test set     -10.6220456 14.729408 13.404275 -10.9584389 13.025167 1.301431
+##                     ACF1 Theil's U
+## Training set  0.01487367        NA
+## Test set     -0.03325530 0.6292987
+```
+
+---
+class: middle
+
+##Modelo ARIMA 2
+
+
+`$$(1 - \phi_1 B - \phi_2 B^2 )(1 - B^{12})Z_t = (1- \theta_1 B - \theta_2 B^2)(1 - \Theta_1 B^{12})a_t$$`
+
+
+```r
+modArima2 = Arima(bebidas , order = c(2,0,2), seasonal = c(0,1,1), include.drift = TRUE)
+summary(modArima2)
+```
+
+---
+class: middle
+
+
+```
+## Series: bebidas 
+## ARIMA(2,0,2)(0,1,1)[12] with drift 
+## 
+## Coefficients:
+##          ar1     ar2     ma1      ma2     sma1   drift
+##       0.0392  0.7589  0.5059  -0.4941  -0.7399  0.3265
+## s.e.  0.0686  0.0564  0.0854   0.0822   0.0690  0.0768
+## 
+## sigma^2 estimated as 59.6:  log likelihood=-585.95
+## AIC=1185.9   AICc=1186.6   BIC=1207.77
+## 
+## Training set error measures:
+##                     ME     RMSE      MAE        MPE     MAPE      MASE
+## Training set 0.1008877 7.324041 5.370458 -0.3360526 5.747349 0.5214218
+##                     ACF1
+## Training set -0.03898755
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+![](Estudo_de_Caso_3_files/figure-html/unnamed-chunk-31-1.png)&lt;!-- --&gt;
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(2,0,2)(0,1,1)[12] with drift
+## Q* = 28.454, df = 18, p-value = 0.05547
+## 
+## Model df: 6.   Total lags used: 24
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(2,0,2)(0,1,1)[12] with drift
+## Q* = 28.454, df = 18, p-value = 0.05547
+## 
+## Model df: 6.   Total lags used: 24
+```
+
+---
+class: middle
+##Acurácia - Modelo ARIMA 2
+
+
+```
+##                      ME      RMSE       MAE        MPE      MAPE      MASE
+## Training set  0.1008877  7.324041  5.370458 -0.3360526  5.747349 0.5214218
+## Test set     -7.8281056 12.704423 10.947063 -8.3240742 10.640934 1.0628585
+##                     ACF1 Theil's U
+## Training set -0.03898755        NA
+## Test set      0.07302944 0.5242724
+```
+
+
+
+```
+##                      ME      RMSE       MAE        MPE      MAPE      MASE
+## Training set  0.1008877  7.324041  5.370458 -0.3360526  5.747349 0.5214218
+## Test set     -7.8281056 12.704423 10.947063 -8.3240742 10.640934 1.0628585
+##                     ACF1 Theil's U
+## Training set -0.03898755        NA
+## Test set      0.07302944 0.5242724
+```
+
+
+
+
+
+
+---
+class: middle, inverse, center
+###Lavras
+
+
+---
+class: middle
+
+###Gráfico da série
+
+![](Estudo_de_Caso_3_files/figure-html/unnamed-chunk-35-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Modelos Alternativo 
+
+`\begin{align}
+Z_t   =&amp; \mu_t + S_t + \epsilon_t \\
+\mu_t =&amp; \mu_{t-1} + \eta_t \\
+a_t =&amp; S_t + S_{t-1} + \ldots + S_{t-s+1}.
+\end{align}`
+com `\(s=12.\)`
+
+####Representação em Modelos de Espaço de Estados
+
+`\begin{align}
+Z_t   =&amp; \left[ \begin{matrix} 1 &amp;  1 &amp; \ldots &amp; 0 \end{matrix}\right] \mathbf{X}_t + \epsilon_t.\\
+\mathbf{X}_t =&amp; 
+  \left[\begin{matrix}
+         \mu_t \\
+         S_t \\
+         S_{t-1} \\
+         S_{t-2} \\
+         \vdots \\
+         S_{t-s+2}
+         \end{matrix}\right].
+         =
+  \left[\begin{matrix}
+         1 &amp; 0 &amp; 0 &amp; 0 &amp; \ldots &amp; 0 \\
+         0 &amp; -1 &amp;-1 &amp; -1 &amp; \ldots &amp; -1\\
+         0 &amp; 1 &amp;  0 &amp; 0 &amp; \ldots &amp; 0 \\
+         0  &amp; 0 &amp; 1 &amp;  0 &amp; \ldots &amp; 0 \\
+         \vdots   &amp; \vdots &amp; \vdots &amp; \ddots  &amp; \ldots &amp; 0  \\
+         0   &amp; 0 &amp; 0 &amp; \ldots &amp; 1 &amp; 0
+         \end{matrix}\right]
+\left[\begin{matrix}
+       \mu_{t-1} \\
+       S_{t-1} \\
+       S_{t-2} \\
+       S_{t-3} \\
+       \vdots \\
+       S_{t-s+1}
+       \end{matrix}\right] +
+  \left[\begin{matrix}
+         \eta_{t} \\
+         a_{t} \\
+         0 \\
+         0 \\
+         \vdots \\
+         0
+         \end{matrix}\right].
+\end{align}`
+
+
+---
+class: middle
+###Modelos Alternativo 
+
+
+
+```r
+y = lavras
+ 
+dlm3 = dlmModPoly(order=1) + dlmModSeas(12)
+
+    buildFun = function(x) {
+      diag(W(dlm3))[1:2] = exp(x[1:2])
+      V(dlm3) = exp(x[3])
+      return(dlm3)
+}
+fit3 = dlmMLE(y,parm=c(0.1,0.1,0.1),build=buildFun)
+dlm3 = buildFun(fit3$par)
+
+
+ySmooth = dlmSmooth(y, mod = dlm3)
+x = cbind(y, dropFirst(ySmooth$s[, c(1, 3)])) 
+colnames(x) = c("Chuva", "Tendencias", "Sazonalidade")
+plot(x, type = "o", main = "Chuva")
+```
+
+---
+class: middle
+###Modelos Alternativo 
+
+
+![](Estudo_de_Caso_3_files/figure-html/unnamed-chunk-37-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+###Modelos Alternativo 
+
+![](Estudo_de_Caso_3_files/figure-html/unnamed-chunk-38-1.png)&lt;!-- --&gt;
+
+
+
+
+---
+class: middle
+###Modelos Alternativo 
+
+
+###EQM
+
+
+```
+## [1] 4893.192
+```
+
+###MAE
+
+
+```
+## [1] 53.00174
+```
+
+###MAPE 
+
+
+```
+## [1] 8.688948
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

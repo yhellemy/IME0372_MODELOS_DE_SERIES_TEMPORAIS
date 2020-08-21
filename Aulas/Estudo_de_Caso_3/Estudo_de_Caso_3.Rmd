@@ -1,0 +1,953 @@
+---
+title: "Estudo de caso - espaço de estados"
+subtitle: ""
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: middle
+#Introdução
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(ggpmisc)
+library(knitr)
+library(kableExtra)
+library(lubridate)
+library(zoo)
+library(httr)
+library(xlsx)
+library(fpp2)
+library(TTR)
+library(forecast)
+library(stlplus)
+library(ggpubr)
+library(dlm)
+
+```
+
+- Nessa aula serão feitas algumas análises estatísticas com modelo de espaço de estados.
+
+
+###Representação em espaço de estados
+
+
+\begin{align}
+Z_t   =& \mathbf{A}_t \mathbf{X}_t + \nu_t \phantom{111} \mbox{(equação de observação)}\\
+\mathbf{X}_{t}  =& \mathbf{G}_t \mathbf{X}_{t-1}  + \mathbf{w}_t, \phantom{11} t = 1, \ldots, N.  \phantom{111} \mbox{(equação de estado)}
+\end{align}
+
+---
+class: middle
+####Modelo de Nível Local (MNL)
+
+
+\begin{align}
+Z_t =& \mu_t + \epsilon_t, \phantom{111} t = 1, \ldots, N, \\
+\mu_t =& \mu_{t-1} + \eta_t, \phantom{111} t = 1, \ldots, N.
+\end{align}
+em que $\epsilon_t \sim N(0,\sigma_{\epsilon}^2)$ e $\eta_t \sim N(0, \sigma^2_{\eta})$.
+
+
+####Modelo de Tendência Local
+
+
+\begin{align}
+Z_t   =& \mu_t + \epsilon_t \\
+\mu_t =& \mu_{t-1} + \beta_{t-1} + \eta_t \\
+\beta_t =& \beta_{t-1} + \xi_t.
+\end{align}
+em que $\epsilon_t \sim N(0,\sigma^2_{\epsilon})$, 
+$\eta_t \sim N(0,\sigma^2_{\eta})$ e $\xi_t \sim N(0,\sigma^2_{\xi}).$
+
+
+####Modelo Estrutural Básico
+
+\begin{align}
+Z_t   =& \mu_t + S_t + \epsilon_t \\
+\mu_t =& \mu_{t-1} + \beta_{t-1} + \eta_t \\
+\beta_t =& \beta_{t-1} + \xi_t. \\
+a_t =& S_t + S_{t-1} + \ldots + S_{t-s+1}.
+\end{align}
+em que $\epsilon_t \sim N(0,\sigma_{\epsilon}^2)$, $\eta_t \sim N(0, \sigma^2_{\eta})$ e $a_t \sim N(0, \sigma^2_{a})$ .
+
+
+
+---
+class: middle
+##Modelos de Espaço de Estados - Software R
+
+- Inicialmente, vamos usar a função `StructTS` da biblioteca `stats` do software R. Essa biblioteca já é pré-instalada quando se intala o R base.
+
+- Com o uso dessa biblioteca, pode-se ajustar três tipos de modelos:
+
+- O modelo de nível local (`type = level`).
+
+- O modelo de tendência local linear (`type  = trend`).
+
+- O modelo Estrutural Básico (`type  = BSM`).
+
+
+---
+class: middle
+#Conjunto de dados  
+
+ -  A primeira série temporal a ser analisada é a série $A_8$ (Bebidas).
+ 
+ -  M-Bebida - Produção Física Industrial - Alimentação e Bebidas elaboradas para Indústria (base média de 1991 = 100), observações mensais de janeiro de 1985 a julho de 2000.
+ 
+ - Vamos usar como amostra de treinamento valores mensais janeiro de 1985 até dezembro de 1999.
+ 
+ - E vamos usar como amostra teste valores mensais de janeiro de 2000 até julho de 2000.
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+url1 = 'https://www.ime.usp.br/~pam/BEBIDA.XLS'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  read.xlsx(tf, sheetIndex = 1, header=FALSE)
+x =  as.numeric(as.matrix(unlist(dat$X1)))
+
+bebidas = ts(data=x, frequency = 12, start=c(1985,1), end=c(1999,12))
+
+bebidas_teste = ts(x, frequency = 12, start=c(1985,1))
+
+```
+
+---
+class: middle
+###Conjunto de dados 1 - Gráfico da série
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+bebidas %>% autoplot()+theme_bw()+ylab('Consumo Mensal de Energia')+xlab('Meses')
+```
+
+---
+class: middle
+###Conjunto de dados 1 - Gráfico de sub séries por ano
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+ggseasonplot(bebidas, year.labels=TRUE, year.labels.left=TRUE ) + theme_bw() +xlab('Meses')+ylab('Bebidas')+ggtitle('')
+```
+
+
+---
+class: middle
+##Modelos Ajustado - Modelo Estrutural Básico
+
+\begin{align}
+Z_t   =& \mu_t + S_t + \epsilon_t \\
+\mu_t =& \mu_{t-1} + \beta_{t-1} + \eta_t \\
+\beta_t =& \beta_{t-1} + \xi_t. \\
+a_t =& S_t + S_{t-1} + \ldots + S_{t-s+1}.
+\end{align}
+com $s=12.$
+
+####Representação em Modelos de Espaço de Estados
+
+\begin{align}
+Z_t   =& \left[ \begin{matrix} 1 & 0 & 1 & \ldots & 0 \end{matrix}\right] \mathbf{X}_t + \epsilon_t.\\
+\mathbf{X}_t =& 
+  \left[\begin{matrix}
+         \mu_t \\
+         \beta_t \\
+         S_t \\
+         S_{t-1} \\
+         S_{t-2} \\
+         \vdots \\
+         S_{t-s+2}
+         \end{matrix}\right].
+         =
+  \left[\begin{matrix}
+         1 & 1 & 0 & 0 & 0 & \ldots & 0 \\
+         0 & 1 & 0 & 0 & 0 &\ldots & 0 \\
+         0 & 0 & -1 &-1 & -1 & \ldots & -1\\
+         0 & 0 & 1 &  0 & 0 & \ldots & 0 \\
+         0 & 0 & 0 & 1 &  0 & \ldots & 0 \\
+         \vdots &0  & \vdots & \vdots & \ddots  & \ldots & 0  \\
+         0 & 0  & 0 & 0 & \ldots & 1 & 0
+         \end{matrix}\right]
+\left[\begin{matrix}
+       \mu_{t-1} \\
+       \beta_{t-1} \\
+       S_{t-1} \\
+       S_{t-2} \\
+       S_{t-3} \\
+       \vdots \\
+       S_{t-s+1}
+       \end{matrix}\right] +
+  \left[\begin{matrix}
+         \eta_{t} \\
+         \xi_{t} \\
+         a_{t} \\
+         0 \\
+         0 \\
+         \vdots \\
+         0
+         \end{matrix}\right].
+\end{align}
+
+
+---
+class: middle
+##Modelos de Espaço de Estados
+
+
+####Estimativas dos parâmetros de Variâncias
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+modTS = StructTS(bebidas, type="BSM")
+if(modTS$code != 0 ) stop("optimizer did not converge")
+
+print(modTS$coef)
+
+```
+
+
+---
+class: middle
+##Modelos de Espaço de Estados
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+tsdiag(modTS)
+
+```
+
+
+
+---
+class: middle
+##Modelos de Espaço de Estados
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+accuracy(forecast(modTS, h=7), bebidas_teste)
+
+
+```
+
+
+---
+class: middle
+
+##Previsão dos Modelos
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+p2 = forecast(modTS, h=7) %>% autoplot() 
+p3 = bebidas_teste %>% autoplot() 
+
+mods2 <- ggarrange( p2, p3, nrow=2,ncol=1)
+mods2
+
+```
+
+
+---
+class: middle
+##Modelos de Espaço de Estados - Software R
+
+
+###Pacote dlm
+
+| Parâmetros do Modelo                |   Nome na lista             |
+| --------------------------| -----------------------|
+| $A_t$       |  FF |    
+| $R$  |  V |
+| $G_t$                |  G             |
+| $Q$   | W |    
+
+
+---
+class: middle
+##Modelos de Espaço de Estados - Software R
+
+###Pacote dlm
+
+| Função                |  Modelo                    |
+| --------------------------| -----------------------|
+| `dlm`         | DLM genérico |    
+| `dlmModARMA`  | Processo ARMA |
+| `dlmModPoly`  | DLM com Polinômio de enésima ordem |
+| `dlmModReg`   | Regressão Linear |    
+| `dlmModSeas`  | Fatores Sazonais e/ou Periódico  |
+| `dlmModTrig`  | Forma Trigonométrica, Periódica  |
+
+
+---
+class: middle
+##Modelos de Espaço de Estados - Software R
+
+###Pacote dlm
+
+| Função                |  Modelo                    |
+| --------------------------| -----------------------|
+| `dlmFilter`         | Filtro de Kalman|    
+| `dlmSmooth`  | Suavizador de Kalman |
+| `dlmForecast`  | Previsão|
+| `dlmLL`   | Função de Verossimilhança|    
+| `dlmMLE`  | Estimação de Máxima Verossimilhança  |
+
+
+---
+class: middle
+####Ajuste do Modelo Estrutural Básico usando a biblioteca `dlm`
+
+```{r, eval = FALSE}
+
+#Dados
+y = bebidas
+
+#Tendencia linear local+ sazonalidade    
+dlmBebidas = dlmModPoly() + dlmModSeas(12)
+
+#Funcao para ser otimizada
+bsmBebidas = function(x) {
+      V(dlmBebidas) = exp(x[1])
+      diag(W(dlmBebidas))[1:3] = exp(x[2:4])
+      return(dlmBebidas)
+}
+
+#Estimador de Maxima Verossimilhanca
+fitBebidas = dlmMLE(y,parm=c(0,0,0, 0),build=bsmBebidas) 
+dlmBebidas = bsmBebidas(fitBebidas$par)
+
+#Estimativas de Maxima Verossimilhança
+mle.est = round(exp(fitBebidas$par),3)
+names(mle.est) = c("epsilon","level","slope","seas" )
+mle.est
+
+
+```
+
+[Fonte do codigo:](https://robjhyndman.com/talks/ABS3.pdf.)
+
+---
+class: middle
+####Ajuste do Modelo Estrutural Básico usando a biblioteca `dlm`
+
+```{r, echo = FALSE}
+
+#Dados
+y = bebidas
+
+#Tendencia linear local+ sazonalidade    
+dlmBebidas = dlmModPoly() + dlmModSeas(12)
+
+#Funcao para ser otimizada
+bsmBebidas = function(x) {
+      V(dlmBebidas) = exp(x[1])
+      diag(W(dlmBebidas))[1:3] = exp(x[2:4])
+      return(dlmBebidas)
+}
+
+#Estimador de Maxima Verossimilhanca
+fitBebidas = dlmMLE(y,parm=c(0.1,0.1,0.1, 0.1),build=bsmBebidas) 
+dlmBebidas = bsmBebidas(fitBebidas$par)
+
+#Estimativas de Maxima Verossimilhança
+mle.est = round(exp(fitBebidas$par),3)
+names(mle.est) = c("epsilon","level","slope","seas" )
+mle.est
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+---
+class: middle
+##Suavizador de Kalman
+
+```{r, eval = FALSE}
+ySmooth = dlmSmooth(y, mod = dlmBebidas)
+x = cbind(y, dropFirst(ySmooth$s[, c(1, 3)])) 
+colnames(x) = c("Bebidas", "Tendência", "Sazonalidade")
+plot(x, type = "o", main = "Bebidas")
+
+```
+
+[Fonte sobre Suavizador de Kalman 1](https://communities.sas.com/t5/SAS-Communities-Library/Kalman-Filtering-and-Kalman-Smoothing-in-PROC-UCM/ta-p/338797#:~:text=Kalman%20filtering%20uses%20all%20the,and%20uses%20all%20the%20data.&text=The%20smoothing%20gives%20a%20good,matrix%20of%20the%20state%20variables.) [Fonte sobre Suavizador de Kalman 2](https://christophertonetti.com/files/notes/Nakata_Tonetti_KalmanFilterAndSmoother.pdf.) 
+
+
+---
+class: middle
+### Suavizador de Kalman
+
+```{r, echo = FALSE}
+ySmooth = dlmSmooth(y, mod = dlmBebidas)
+x = cbind(y, dropFirst(ySmooth$s[, c(1, 3)])) 
+colnames(x) = c("Bebidas", "Tendência", "Sazonalidade")
+plot(x, type = "o", main = "Bebidas")
+
+```
+
+
+
+---
+class: middle
+##Previsão de um modelo de espaço de estado
+
+
+```{r, eval = FALSE}
+
+Filt <- dlmFilter(y, mod = dlmBebidas)
+Fore <- dlmForecast(Filt, nAhead = 7)
+
+novos_dados = c(y,Fore$f)
+
+idx=c(1:length(novos_dados))
+
+plot(idx,novos_dados, ylab="",xlab="Tempo", main="Bebidas",col=ifelse(idx<=180,"black","red"),type="o",pch=16)
+
+
+```
+
+---
+class: middle
+##Previsão de um modelo de espaço de estado
+
+
+```{r, echo = FALSE}
+
+Filt <- dlmFilter(y, mod = dlmBebidas)
+Fore <- dlmForecast(Filt, nAhead = 7)
+
+novos_dados = c(y,Fore$f)
+
+idx=c(1:length(novos_dados))
+
+par(mfrow=c(2,1))
+plot(idx,novos_dados, ylab="",xlab="Tempo", main="Bebidas",col=ifelse(idx<=180,"black","red"),type="o",pch=16)
+plot.ts(bebidas_teste)
+
+
+
+```
+
+---
+class: middle
+
+###EQM
+
+```{r, echo = FALSE}
+
+mean(c(bebidas_teste[181:187] - Fore$f)^2)
+
+```
+
+###MAE
+
+```{r, echo = FALSE}
+
+mean(abs(bebidas_teste[181:187] - Fore$f))
+
+```
+
+###MAPE 
+
+```{r, echo = FALSE}
+
+mean(abs(bebidas_teste[181:187] - Fore$f)/bebidas_teste[181:187])
+
+```
+
+
+
+
+---
+class: middle
+###Modelos Alternativo 
+
+\begin{align}
+Z_t   =& \mu_t + S_t + \epsilon_t \\
+\mu_t =& \mu_{t-1} + \eta_t \\
+a_t =& S_t + S_{t-1} + \ldots + S_{t-s+1}.
+\end{align}
+com $s=12.$
+
+####Representação em Modelos de Espaço de Estados
+
+\begin{align}
+Z_t   =& \left[ \begin{matrix} 1 &  1 & \ldots & 0 \end{matrix}\right] \mathbf{X}_t + \epsilon_t.\\
+\mathbf{X}_t =& 
+  \left[\begin{matrix}
+         \mu_t \\
+         S_t \\
+         S_{t-1} \\
+         S_{t-2} \\
+         \vdots \\
+         S_{t-s+2}
+         \end{matrix}\right].
+         =
+  \left[\begin{matrix}
+         1 & 0 & 0 & 0 & \ldots & 0 \\
+         0 & -1 &-1 & -1 & \ldots & -1\\
+         0 & 1 &  0 & 0 & \ldots & 0 \\
+         0  & 0 & 1 &  0 & \ldots & 0 \\
+         \vdots   & \vdots & \vdots & \ddots  & \ldots & 0  \\
+         0   & 0 & 0 & \ldots & 1 & 0
+         \end{matrix}\right]
+\left[\begin{matrix}
+       \mu_{t-1} \\
+       S_{t-1} \\
+       S_{t-2} \\
+       S_{t-3} \\
+       \vdots \\
+       S_{t-s+1}
+       \end{matrix}\right] +
+  \left[\begin{matrix}
+         \eta_{t} \\
+         a_{t} \\
+         0 \\
+         0 \\
+         \vdots \\
+         0
+         \end{matrix}\right].
+\end{align}
+
+
+---
+class: middle
+###Modelos Alternativo 
+
+
+```{r, eval = FALSE}
+ 
+dlm3 = dlmModPoly(order=1) + dlmModSeas(12)
+
+    buildFun = function(x) {
+      diag(W(dlm3))[1:2] = exp(x[1:2])
+      V(dlm3) = exp(x[3])
+      return(dlm3)
+}
+fit3 = dlmMLE(y,parm=c(0.1,0.1,0.1),build=buildFun)
+dlm3 = buildFun(fit3$par)
+
+
+ySmooth = dlmSmooth(y, mod = dlm3)
+x = cbind(y, dropFirst(ySmooth$s[, c(1, 3)])) 
+colnames(x) = c("Bebidas", "Tendencias", "Sazonalidade")
+plot(x, type = "o", main = "Bebidas")
+
+
+
+```
+
+---
+class: middle
+###Modelos Alternativo 
+
+
+```{r, echo = FALSE}
+ 
+dlm3 = dlmModPoly(order=1) + dlmModSeas(12)
+
+    buildFun = function(x) {
+      diag(W(dlm3))[1:2] = exp(x[1:2])
+      V(dlm3) = exp(x[3])
+      return(dlm3)
+}
+fit3 = dlmMLE(y,parm=c(0.1,0.1,0.1),build=buildFun)
+dlm3 = buildFun(fit3$par)
+
+
+ySmooth = dlmSmooth(y, mod = dlm3)
+x = cbind(y, dropFirst(ySmooth$s[, c(1, 3)])) 
+colnames(x) = c("Bebidas", "Tendencias", "Sazonalidade")
+plot(x, type = "o", main = "Bebidas")
+
+
+
+```
+
+---
+class: middle
+###Modelos Alternativo 
+
+```{r, echo = FALSE}
+
+Filt <- dlmFilter(y, mod = dlm3)
+Fore <- dlmForecast(Filt, nAhead = 7)
+
+novos_dados = c(y,Fore$f)
+
+idx=c(1:length(novos_dados))
+
+par(mfrow=c(2,1))
+plot(idx,novos_dados, ylab="",xlab="Tempo", main="Bebidas",col=ifelse(idx<=180,"black","red"),type="o",pch=16)
+plot.ts(bebidas_teste)
+
+
+
+```
+
+
+
+
+---
+class: middle
+###Modelos Alternativo 
+
+
+###EQM
+
+```{r, echo = FALSE}
+
+mean(c(bebidas_teste[181:187] - Fore$f)^2)
+
+```
+
+###MAE
+
+```{r, echo = FALSE}
+
+mean(abs(bebidas_teste[181:187] - Fore$f))
+
+```
+
+###MAPE 
+
+```{r, echo = FALSE}
+
+mean(abs(bebidas_teste[181:187] - Fore$f)/bebidas_teste[181:187])
+
+```
+
+
+---
+class: middle, inverse, center
+
+##Comparação com os modelos ARIMA
+
+
+---
+class: middle
+
+##Modelo ARIMA 1
+
+$$(1 -\phi_1 B - \ldots - \phi_{10} B^{10})(1 - B^{12})(1 - B)Z_t =
+(1 - \theta B)(1 - \Theta_1 B^{12})a_t.$$
+
+
+```{r, eval= FALSE, warning=FALSE, message=FALSE}
+modArima = Arima(bebidas , order = c(10,0,0), seasonal = c(0,1,1), include.drift = TRUE)
+summary(modArima)
+```
+
+
+---
+class: middle
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+modArima = Arima(bebidas , order = c(10,0,0), seasonal = c(0,1,1), include.drift = TRUE)
+summary(modArima)
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(modArima, plot=TRUE, lag=24)
+
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(modArima, plot=FALSE, lag=24)
+
+```
+
+---
+class: middle
+##Acurácia - Modelo ARIMA 1
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+accuracy(forecast(modArima,h=7), bebidas_teste)
+
+```
+
+---
+class: middle
+
+##Modelo ARIMA 2
+
+
+$$(1 - \phi_1 B - \phi_2 B^2 )(1 - B^{12})Z_t = (1- \theta_1 B - \theta_2 B^2)(1 - \Theta_1 B^{12})a_t$$
+
+```{r, eval= FALSE, warning=FALSE, message=FALSE}
+modArima2 = Arima(bebidas , order = c(2,0,2), seasonal = c(0,1,1), include.drift = TRUE)
+summary(modArima2)
+```
+
+---
+class: middle
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+modArima2 = Arima(bebidas , order = c(2,0,2), seasonal = c(0,1,1), include.drift = TRUE)
+summary(modArima2)
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(modArima2, plot=TRUE, lag=24)
+
+```
+
+---
+class: middle
+
+###Diagnóstico: Teste de Ljung Box
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(modArima2, plot=FALSE, lag=24)
+
+```
+
+---
+class: middle
+##Acurácia - Modelo ARIMA 2
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+accuracy(forecast(modArima2,h=7), bebidas_teste)
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+accuracy(forecast(modArima2,h=7), bebidas_teste)
+
+```
+
+
+
+
+
+
+---
+class: middle, inverse, center
+###Lavras
+
+
+---
+class: middle
+
+###Gráfico da série
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+url1 = 'https://www.ime.usp.br/~pam/LAVRAS.XLS'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+
+lavras_teste = ts(dat$Precipitação, frequency = 12, start=c(1966,1))
+
+lavras = ts(dat$Precipitação, frequency = 12, start=c(1966,1), end=c(1996,12))
+
+lavras %>% autoplot() + theme_bw() + ggtitle("Precipitação Atmosférica em Lavras")
+
+```
+
+
+---
+class: middle
+###Modelos Alternativo 
+
+\begin{align}
+Z_t   =& \mu_t + S_t + \epsilon_t \\
+\mu_t =& \mu_{t-1} + \eta_t \\
+a_t =& S_t + S_{t-1} + \ldots + S_{t-s+1}.
+\end{align}
+com $s=12.$
+
+####Representação em Modelos de Espaço de Estados
+
+\begin{align}
+Z_t   =& \left[ \begin{matrix} 1 &  1 & \ldots & 0 \end{matrix}\right] \mathbf{X}_t + \epsilon_t.\\
+\mathbf{X}_t =& 
+  \left[\begin{matrix}
+         \mu_t \\
+         S_t \\
+         S_{t-1} \\
+         S_{t-2} \\
+         \vdots \\
+         S_{t-s+2}
+         \end{matrix}\right].
+         =
+  \left[\begin{matrix}
+         1 & 0 & 0 & 0 & \ldots & 0 \\
+         0 & -1 &-1 & -1 & \ldots & -1\\
+         0 & 1 &  0 & 0 & \ldots & 0 \\
+         0  & 0 & 1 &  0 & \ldots & 0 \\
+         \vdots   & \vdots & \vdots & \ddots  & \ldots & 0  \\
+         0   & 0 & 0 & \ldots & 1 & 0
+         \end{matrix}\right]
+\left[\begin{matrix}
+       \mu_{t-1} \\
+       S_{t-1} \\
+       S_{t-2} \\
+       S_{t-3} \\
+       \vdots \\
+       S_{t-s+1}
+       \end{matrix}\right] +
+  \left[\begin{matrix}
+         \eta_{t} \\
+         a_{t} \\
+         0 \\
+         0 \\
+         \vdots \\
+         0
+         \end{matrix}\right].
+\end{align}
+
+
+---
+class: middle
+###Modelos Alternativo 
+
+
+```{r, eval = FALSE}
+
+y = lavras
+ 
+dlm3 = dlmModPoly(order=1) + dlmModSeas(12)
+
+    buildFun = function(x) {
+      diag(W(dlm3))[1:2] = exp(x[1:2])
+      V(dlm3) = exp(x[3])
+      return(dlm3)
+}
+fit3 = dlmMLE(y,parm=c(0.1,0.1,0.1),build=buildFun)
+dlm3 = buildFun(fit3$par)
+
+
+ySmooth = dlmSmooth(y, mod = dlm3)
+x = cbind(y, dropFirst(ySmooth$s[, c(1, 3)])) 
+colnames(x) = c("Chuva", "Tendencias", "Sazonalidade")
+plot(x, type = "o", main = "Chuva")
+
+
+
+```
+
+---
+class: middle
+###Modelos Alternativo 
+
+
+```{r, echo = FALSE}
+
+y = lavras 
+
+dlm3 = dlmModPoly(order=1) + dlmModSeas(12)
+
+    buildFun = function(x) {
+      diag(W(dlm3))[1:2] = exp(x[1:2])
+      V(dlm3) = exp(x[3])
+      return(dlm3)
+}
+fit3 = dlmMLE(y,parm=c(0.1,0.1,0.1),build=buildFun)
+dlm3 = buildFun(fit3$par)
+
+
+
+ySmooth = dlmSmooth(y, mod = dlm3)
+x = cbind(y, dropFirst(ySmooth$s[, c(1, 3)])) 
+colnames(x) = c("Chuva", "Tendencias", "Sazonalidade")
+plot(x, type = "o", main = "Chuva")
+
+
+
+
+```
+
+---
+class: middle
+###Modelos Alternativo 
+
+```{r, echo = FALSE}
+
+Filt <- dlmFilter(y, mod = dlm3)
+Fore <- dlmForecast(Filt, nAhead = 12)
+
+novos_dados = c(y,Fore$f)
+
+idx=c(1:length(novos_dados))
+
+par(mfrow=c(2,1))
+plot(idx,novos_dados, ylab="",xlab="Tempo", main="Chuva",col=ifelse(idx<=360,"black","red"),type="o",pch=16)
+plot.ts(lavras_teste)
+
+
+
+```
+
+
+
+
+---
+class: middle
+###Modelos Alternativo 
+
+
+###EQM
+
+```{r, echo = FALSE}
+
+mean(c(lavras_teste[361:372] - Fore$f)^2)
+
+```
+
+###MAE
+
+```{r, echo = FALSE}
+
+mean(abs(lavras_teste[361:372] - Fore$f))
+
+```
+
+###MAPE 
+
+```{r, echo = FALSE}
+
+mean(abs(lavras_teste[361:372] - Fore$f)/lavras_teste[361:372])
+
+```
+
+
